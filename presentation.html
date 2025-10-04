@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Présentation - Système de Gestion Scolaire</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slide {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 30px 0;
+            padding: 40px;
+            min-height: 600px;
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+
+        .slide h2 {
+            color: #34495e;
+            font-size: 2em;
+            margin: 25px 0 15px 0;
+        }
+
+        .slide h3 {
+            color: #7f8c8d;
+            font-size: 1.5em;
+            margin: 20px 0 10px 0;
+        }
+
+        .slide p, .slide li {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .slide ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .slide li {
+            margin-bottom: 8px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-card h4 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-item {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.2em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .nav-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .nav-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-counter {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin: 0 15px;
+        }
+
+        .highlight {
+            background: #f39c12;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .architecture-diagram {
+            background: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .layer {
+            background: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+
+        .demo-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #27ae60;
+        }
+
+        .contact-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Titre -->
+        <div class="slide active">
+            <h1>🎓 Système de Gestion Scolaire</h1>
+            <div style="text-align: center; margin: 50px 0;">
+                <h2>Solution Complète pour la Gestion Éducative</h2>
+                <p style="font-size: 1.5em; color: #7f8c8d; margin: 30px 0;">
+                    Développé avec Django - Interface Moderne - Multi-utilisateurs
+                </p>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number">4</div>
+                        <div class="stat-label">Types d'Utilisateurs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Modules</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Open Source</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Vue d'ensemble -->
+        <div class="slide">
+            <h1>📋 Vue d'Ensemble du Projet</h1>
+            <h2>🎯 Objectif</h2>
+            <p>Créer une solution complète de gestion scolaire qui simplifie l'administration éducative et améliore la communication entre tous les acteurs de l'école.</p>
+            
+            <h2>👥 Utilisateurs Cibles</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>👨‍🎓 Élèves</h4>
+                    <p>Consultation des notes, bulletins, emploi du temps et communications</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍🏫 Professeurs</h4>
+                    <p>Saisie des notes, gestion des classes, communication avec les parents</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍👩‍👧‍👦 Parents</h4>
+                    <p>Suivi de la scolarité de leurs enfants, communication avec l'école</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍💼 Administrateurs</h4>
+                    <p>Gestion complète du système, utilisateurs, et configuration</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Fonctionnalités Principales -->
+        <div class="slide">
+            <h1>⚡ Fonctionnalités Principales</h1>
+            
+            <h2>📚 Gestion Académique</h2>
+            <ul>
+                <li><span class="highlight">Gestion des matières</span> - Organisation des cours et programmes</li>
+                <li><span class="highlight">Système de notes</span> - Saisie et calcul automatique des moyennes</li>
+                <li><span class="highlight">Génération de bulletins</span> - Création automatique des bulletins trimestriels</li>
+                <li><span class="highlight">Évaluations</span> - Gestion des contrôles et examens</li>
+            </ul>
+
+            <h2>👥 Gestion des Utilisateurs</h2>
+            <ul>
+                <li><span class="highlight">Profils personnalisés</span> - Gestion des informations personnelles</li>
+                <li><span class="highlight">Authentification sécurisée</span> - Système de connexion multi-niveaux</li>
+                <li><span class="highlight">Permissions granulaires</span> - Contrôle d'accès par rôle</li>
+                <li><span class="highlight">Gestion des classes</span> - Organisation des élèves par niveau</li>
+            </ul>
+
+            <h2>📅 Planning et Organisation</h2>
+            <ul>
+                <li><span class="highlight">Emploi du temps</span> - Planning des cours et activités</li>
+                <li><span class="highlight">Réservation de salles</span> - Gestion des espaces</li>
+                <li><span class="highlight">Événements</span> - Calendrier des activités scolaires</li>
+            </ul>
+        </div>
+
+        <!-- Slide 4: Architecture Technique -->
+        <div class="slide">
+            <h1>🏗️ Architecture Technique</h1>
+            
+            <div class="architecture-diagram">
+                <h3>Stack Technologique</h3>
+                <div class="layer">
+                    <strong>Frontend</strong> - HTML5, CSS3, JavaScript, Bootstrap 4
+                </div>
+                <div class="layer">
+                    <strong>Backend</strong> - Django 4.2.5, Python 3.8+
+                </div>
+                <div class="layer">
+                    <strong>Base de Données</strong> - SQLite (dev), PostgreSQL/MySQL (prod)
+                </div>
+                <div class="layer">
+                    <strong>Déploiement</strong> - Docker, Nginx, Gunicorn
+                </div>
+            </div>
+
+            <h2>🔧 Technologies Utilisées</h2>
+            <div class="tech-stack">
+                <div class="tech-item">Django 4.2.5</div>
+                <div class="tech-item">Python 3.8+</div>
+                <div class="tech-item">Bootstrap 4</div>
+                <div class="tech-item">PostgreSQL</div>
+                <div class="tech-item">Docker</div>
+                <div class="tech-item">GitHub Actions</div>
+                <div class="tech-item">Nginx</div>
+                <div class="tech-item">Gunicorn</div>
+            </div>
+
+            <h2>📊 Caractéristiques Techniques</h2>
+            <ul>
+                <li><span class="highlight">Architecture MVC</span> - Séparation claire des responsabilités</li>
+                <li><span class="highlight">API REST</span> - Interface programmatique complète</li>
+                <li><span class="highlight">Responsive Design</span> - Compatible mobile et desktop</li>
+                <li><span class="highlight">Sécurité</span> - Authentification, autorisation, audit</li>
+            </ul>
+        </div>
+
+        <!-- Slide 5: Interface Utilisateur -->
+        <div class="slide">
+            <h1>🎨 Interface Utilisateur</h1>
+            
+            <h2>📱 Design Responsive</h2>
+            <p>Interface moderne et intuitive qui s'adapte à tous les appareils :</p>
+            <ul>
+                <li><span class="highlight">Desktop</span> - Interface complète avec toutes les fonctionnalités</li>
+                <li><span class="highlight">Tablette</span> - Optimisé pour la navigation tactile</li>
+                <li><span class="highlight">Mobile</span> - Version simplifiée pour l'accès rapide</li>
+            </ul>
+
+            <h2>🎯 Tableaux de Bord Personnalisés</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>👨‍🎓 Élève</h4>
+                    <p>Notes récentes, prochains cours, messages, bulletins</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍🏫 Professeur</h4>
+                    <p>Classes assignées, notes à saisir, planning, communications</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍👩‍👧‍👦 Parent</h4>
+                    <p>Enfants, notes, absences, communications de l'école</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👨‍💼 Administrateur</h4>
+                    <p>Statistiques, gestion utilisateurs, configuration système</p>
+                </div>
+            </div>
+
+            <h2>💬 Système de Communication</h2>
+            <ul>
+                <li><span class="highlight">Messagerie intégrée</span> - Communication directe entre utilisateurs</li>
+                <li><span class="highlight">Notifications</span> - Alertes en temps réel</li>
+                <li><span class="highlight">Annonces</span> - Communication de masse</li>
+            </ul>
+        </div>
+
+        <!-- Slide 6: Déploiement et DevOps -->
+        <div class="slide">
+            <h1>🚀 Déploiement et DevOps</h1>
+            
+            <h2>🐳 Containerisation Docker</h2>
+            <div class="code-block">
+# Démarrage rapide avec Docker
+docker-compose up -d
+
+# Environnements multiples
+docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.dev.yml up -d
+            </div>
+
+            <h2>🔄 CI/CD avec GitHub Actions</h2>
+            <ul>
+                <li><span class="highlight">Tests automatisés</span> - Validation du code à chaque commit</li>
+                <li><span class="highlight">Qualité du code</span> - Linting, formatting, type checking</li>
+                <li><span class="highlight">Sécurité</span> - Scan des vulnérabilités</li>
+                <li><span class="highlight">Déploiement</span> - Mise en production automatique</li>
+            </ul>
+
+            <h2>📊 Monitoring et Logs</h2>
+            <ul>
+                <li><span class="highlight">Logs centralisés</span> - Suivi des activités et erreurs</li>
+                <li><span class="highlight">Métriques de performance</span> - Monitoring en temps réel</li>
+                <li><span class="highlight">Alertes</span> - Notifications automatiques</li>
+            </ul>
+
+            <h2>🔒 Sécurité</h2>
+            <ul>
+                <li><span class="highlight">HTTPS</span> - Chiffrement des communications</li>
+                <li><span class="highlight">Authentification</span> - Système de connexion sécurisé</li>
+                <li><span class="highlight">Audit</span> - Traçabilité des actions</li>
+            </ul>
+        </div>
+
+        <!-- Slide 7: Installation et Utilisation -->
+        <div class="slide">
+            <h1>⚙️ Installation et Utilisation</h1>
+            
+            <h2>🚀 Installation Rapide</h2>
+            <div class="code-block">
+# 1. Cloner le dépôt
+git clone https://github.com/gabisev/-school_management.git
+cd school_management
+
+# 2. Installation automatique
+python setup_dev.py
+
+# 3. Lancer le serveur
+python manage.py runserver
+            </div>
+
+            <h2>🐳 Avec Docker (Recommandé)</h2>
+            <div class="code-block">
+# Développement
+docker-compose -f docker-compose.dev.yml up -d
+
+# Production
+docker-compose -f docker-compose.prod.yml up -d
+            </div>
+
+            <div class="demo-section">
+                <h3>🎯 Premiers Pas</h3>
+                <ol>
+                    <li>Accédez à <strong>http://localhost:8000</strong></li>
+                    <li>Connectez-vous avec <strong>admin/admin123</strong></li>
+                    <li>Créez vos premières classes et matières</li>
+                    <li>Ajoutez des utilisateurs (élèves, professeurs, parents)</li>
+                    <li>Configurez l'emploi du temps</li>
+                </ol>
+            </div>
+
+            <h2>📚 Documentation</h2>
+            <ul>
+                <li><span class="highlight">README.md</span> - Documentation complète</li>
+                <li><span class="highlight">QUICK_START.md</span> - Guide de démarrage rapide</li>
+                <li><span class="highlight">CONTRIBUTING.md</span> - Guide de contribution</li>
+            </ul>
+        </div>
+
+        <!-- Slide 8: Avantages et Bénéfices -->
+        <div class="slide">
+            <h1>💡 Avantages et Bénéfices</h1>
+            
+            <h2>🎯 Pour l'École</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📈 Efficacité</h4>
+                    <p>Automatisation des tâches administratives répétitives</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💰 Économies</h4>
+                    <p>Réduction des coûts de gestion et de papier</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📊 Traçabilité</h4>
+                    <p>Historique complet des actions et communications</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔒 Sécurité</h4>
+                    <p>Protection des données sensibles des élèves</p>
+                </div>
+            </div>
+
+            <h2>👨‍🏫 Pour les Professeurs</h2>
+            <ul>
+                <li><span class="highlight">Gain de temps</span> - Saisie simplifiée des notes</li>
+                <li><span class="highlight">Communication</span> - Contact direct avec parents et élèves</li>
+                <li><span class="highlight">Organisation</span> - Planning et gestion des classes</li>
+                <li><span class="highlight">Suivi</span> - Évolution des élèves en temps réel</li>
+            </ul>
+
+            <h2>👨‍👩‍👧‍👦 Pour les Parents</h2>
+            <ul>
+                <li><span class="highlight">Transparence</span> - Accès direct aux informations scolaires</li>
+                <li><span class="highlight">Communication</span> - Contact facilité avec l'école</li>
+                <li><span class="highlight">Suivi</span> - Monitoring de la progression de l'enfant</li>
+                <li><span class="highlight">Convenance</span> - Accès 24/7 depuis n'importe où</li>
+            </ul>
+        </div>
+
+        <!-- Slide 9: Roadmap et Évolutions -->
+        <div class="slide">
+            <h1>🗺️ Roadmap et Évolutions</h1>
+            
+            <h2>📅 Q1 2024 - Améliorations Immédiates</h2>
+            <ul>
+                <li><span class="highlight">API REST complète</span> - Interface programmatique</li>
+                <li><span class="highlight">Interface mobile</span> - Application native iOS/Android</li>
+                <li><span class="highlight">Notifications push</span> - Alertes en temps réel</li>
+                <li><span class="highlight">Thème sombre</span> - Mode d'affichage alternatif</li>
+            </ul>
+
+            <h2>🚀 Q2-Q3 2024 - Nouvelles Fonctionnalités</h2>
+            <ul>
+                <li><span class="highlight">Module bibliothèque</span> - Gestion des emprunts</li>
+                <li><span class="highlight">Système de paiement</span> - Gestion des frais scolaires</li>
+                <li><span class="highlight">Transport scolaire</span> - Suivi des bus et itinéraires</li>
+                <li><span class="highlight">Intelligence artificielle</span> - Recommandations personnalisées</li>
+            </ul>
+
+            <h2>🌟 Q4 2024+ - Vision Long Terme</h2>
+            <ul>
+                <li><span class="highlight">Multi-tenant</span> - Support de plusieurs établissements</li>
+                <li><span class="highlight">Internationalisation</span> - Support multi-langues</li>
+                <li><span class="highlight">Analytics avancés</span> - Tableaux de bord prédictifs</li>
+                <li><span class="highlight">Intégrations</span> - Connexion avec systèmes externes</li>
+            </ul>
+
+            <div class="demo-section">
+                <h3>🤝 Contribution</h3>
+                <p>Nous encourageons la contribution de la communauté ! Consultez notre <strong>CONTRIBUTING.md</strong> pour participer au développement.</p>
+            </div>
+        </div>
+
+        <!-- Slide 10: Conclusion et Contact -->
+        <div class="slide">
+            <h1>🎯 Conclusion</h1>
+            
+            <h2>✅ Ce que nous avons accompli</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">185</div>
+                    <div class="stat-label">Fichiers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">Modules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Environnements</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Open Source</div>
+                </div>
+            </div>
+
+            <h2>🎊 Points Forts du Projet</h2>
+            <ul>
+                <li><span class="highlight">Solution complète</span> - Tous les aspects de la gestion scolaire</li>
+                <li><span class="highlight">Technologies modernes</span> - Stack technique à jour</li>
+                <li><span class="highlight">Documentation complète</span> - Guides et exemples détaillés</li>
+                <li><span class="highlight">Déploiement facile</span> - Docker et scripts d'installation</li>
+                <li><span class="highlight">Évolutif</span> - Architecture extensible</li>
+            </ul>
+
+            <div class="contact-info">
+                <h2>📞 Contact et Ressources</h2>
+                <p><strong>Dépôt GitHub:</strong> <a href="https://github.com/gabisev/-school_management">github.com/gabisev/-school_management</a></p>
+                <p><strong>Documentation:</strong> README.md, QUICK_START.md, CONTRIBUTING.md</p>
+                <p><strong>Support:</strong> Issues GitHub, Discussions communautaires</p>
+                <p><strong>Licence:</strong> MIT - Libre d'utilisation et modification</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <h2 style="color: #27ae60;">🚀 Prêt à révolutionner la gestion scolaire !</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()" id="prevBtn">← Précédent</button>
+        <span class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">10</span>
+        </span>
+        <button class="nav-button" onclick="nextSlide()" id="nextBtn">Suivant →</button>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        // Navigation clavier
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialisation
+        showSlide(0);
+    </script>
+</body>
+</html>
