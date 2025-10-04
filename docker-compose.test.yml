@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: school_management_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+    command: python manage.py test
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=0
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/school_management_test
+      - DJANGO_SETTINGS_MODULE=school_system.settings_test
+    depends_on:
+      - db

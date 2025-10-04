@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}Logs d'audit - Gestion École{% endblock %}
+
+{% block page_title %}Logs d'audit{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-outline-info" onclick="exportLogs()">
+        <i class="fas fa-download me-1"></i>Exporter
+    </button>
+    <button type="button" class="btn btn-outline-warning" onclick="clearOldLogs()">
+        <i class="fas fa-trash me-1"></i>Nettoyer les anciens logs
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ total_logs }}</h4>
+                        <p class="mb-0">Total des logs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ today_logs }}</h4>
+                        <p class="mb-0">Aujourd'hui</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-day fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ frequent_actions|length }}</h4>
+                        <p class="mb-0">Types d'actions</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-bar fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ active_users|length }}</h4>
+                        <p class="mb-0">Utilisateurs actifs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Filtres de recherche
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="search" 
+                       name="search" 
+                       value="{{ search }}"
+                       placeholder="Utilisateur, action, objet...">
+            </div>
+            <div class="col-md-2">
+                <label for="action" class="form-label">Action</label>
+                <select name="action" id="action" class="form-control">
+                    <option value="">Toutes les actions</option>
+                    {% for action_code, action_name in action_choices %}
+                        <option value="{{ action_code }}" {% if action_filter == action_code %}selected{% endif %}>
+                            {{ action_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="user" class="form-label">Utilisateur</label>
+                <select name="user" id="user" class="form-control">
+                    <option value="">Tous les utilisateurs</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {% if user_filter == user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.get_full_name }} ({{ user.username }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">Date début</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">Date fin</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Actions fréquentes et utilisateurs actifs -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Actions les plus fréquentes
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for action in frequent_actions %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ action.action }}</span>
+                        <span class="badge bg-primary">{{ action.count }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Aucune donnée disponible</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Utilisateurs les plus actifs
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for user in active_users %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ user.user__first_name }} {{ user.user__last_name }}</span>
+                        <span class="badge bg-success">{{ user.count }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Aucune donnée disponible</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des logs -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-history me-2"></i>Historique des actions
+        </h6>
+        <span class="badge bg-secondary">{{ page_obj.paginator.count }} entrées</span>
+    </div>
+    <div class="card-body p-0">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date/Heure</th>
+                            <th>Utilisateur</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                            <th>Objet</th>
+                            <th>Détails</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong>{{ log.timestamp|date:"d/m/Y" }}</strong><br>
+                                    <small class="text-muted">{{ log.timestamp|time:"H:i:s" }}</small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            {% if log.get_user_type == 'admin' %}
+                                                <i class="fas fa-user-shield text-danger"></i>
+                                            {% elif log.get_user_type == 'professeur' %}
+                                                <i class="fas fa-chalkboard-teacher text-primary"></i>
+                                            {% elif log.get_user_type == 'eleve' %}
+                                                <i class="fas fa-user-graduate text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-user text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>{{ log.user.get_full_name }}</strong><br>
+                                            <small class="text-muted">{{ log.user.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if log.get_user_type == 'admin' %}bg-danger
+                                        {% elif log.get_user_type == 'professeur' %}bg-primary
+                                        {% elif log.get_user_type == 'eleve' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ log.get_user_type|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if log.action == 'CREATE' %}bg-success
+                                        {% elif log.action == 'UPDATE' %}bg-warning text-dark
+                                        {% elif log.action == 'DELETE' %}bg-danger
+                                        {% elif log.action == 'LOGIN' %}bg-info
+                                        {% elif log.action == 'LOGOUT' %}bg-secondary
+                                        {% else %}bg-primary{% endif %}">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ log.model_name }}</strong>
+                                    {% if log.object_repr %}
+                                        <br><small class="text-muted">{{ log.object_repr|truncatechars:30 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.details %}
+                                        <span title="{{ log.details }}">
+                                            {{ log.details|truncatechars:40 }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.ip_address %}
+                                        <code>{{ log.ip_address }}</code>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Pagination des logs" class="p-3">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center p-4">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun log trouvé</h5>
+                <p class="text-muted">Aucune action ne correspond aux critères de recherche.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportLogs() {
+    // Fonction pour exporter les logs (à implémenter)
+    alert('Fonction d\'export à implémenter');
+}
+
+function clearOldLogs() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer les logs de plus de 30 jours ?')) {
+        // Fonction pour nettoyer les anciens logs (à implémenter)
+        alert('Fonction de nettoyage à implémenter');
+    }
+}
+</script>
+{% endblock %}
+
+
+
+
+
+

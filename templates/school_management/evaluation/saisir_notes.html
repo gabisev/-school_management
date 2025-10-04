@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load school_extras %}
+
+{% block title %}Saisir les notes - {{ evaluation.titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Saisir les notes - {{ evaluation.titre }}
+                    </h4>
+                    <div>
+                        <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i>Retour à l'évaluation
+                        </a>
+                        <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>Liste des évaluations
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Informations sur l'évaluation -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Matière :</strong> {{ evaluation.matiere.nom }}<br>
+                                        <strong>Classe :</strong> {{ evaluation.classe.nom }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Date :</strong> {{ evaluation.date_evaluation|date:"d/m/Y" }}<br>
+                                        <strong>Type :</strong> {{ evaluation.get_type_evaluation_display }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Note sur :</strong> {{ evaluation.note_sur }}<br>
+                                        <strong>Coefficient :</strong> {{ evaluation.coefficient }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Professeur :</strong> {{ evaluation.professeur.user.get_full_name }}<br>
+                                        <strong>Élèves :</strong> {{ evaluation.classe.eleves.count }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Formulaire de saisie des notes -->
+                    <form method="post" id="notesForm">
+                        {% csrf_token %}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th width="30%">Élève</th>
+                                        <th width="15%">Note / {{ evaluation.note_sur }}</th>
+                                        <th width="10%">Absent</th>
+                                        <th width="30%">Commentaire</th>
+                                        <th width="10%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for eleve in eleves %}
+                                        <tr>
+                                            <td class="text-center fw-bold">{{ forloop.counter }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        <i class="fas fa-user-graduate text-primary"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ eleve.user.get_full_name }}</strong><br>
+                                                        <small class="text-muted">{{ eleve.numero_etudiant }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <input type="number" 
+                                                       name="note_{{ eleve.id }}" 
+                                                       id="note_{{ eleve.id }}"
+                                                       class="form-control" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       max="{{ evaluation.note_sur }}"
+                                                       value="{% for note_id, note in notes_existantes.items %}{% if note_id == eleve.id %}{{ note.note }}{% endif %}{% endfor %}"
+                                                       placeholder="0.00">
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" 
+                                                       name="absent_{{ eleve.id }}" 
+                                                       id="absent_{{ eleve.id }}"
+                                                       class="form-check-input"
+                                                       {% for note_id, note in notes_existantes.items %}{% if note_id == eleve.id and note.absent %}checked{% endif %}{% endfor %}>
+                                            </td>
+                                            <td>
+                                                <textarea name="commentaire_{{ eleve.id }}" 
+                                                          id="commentaire_{{ eleve.id }}"
+                                                          class="form-control" 
+                                                          rows="2" 
+                                                          placeholder="Commentaire...">{% for note_id, note in notes_existantes.items %}{% if note_id == eleve.id %}{{ note.commentaire }}{% endif %}{% endfor %}</textarea>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-success" onclick="setGoodNote({{ eleve.id }})" title="Bonne note">
+                                                        <i class="fas fa-thumbs-up"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-warning" onclick="setAverageNote({{ eleve.id }})" title="Note moyenne">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Aucun élève trouvé pour cette classe.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Boutons d'action rapide -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-light">
+                                    <h6><i class="fas fa-magic me-2"></i>Actions rapides :</h6>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-success" onclick="setAllNotes({{ evaluation.note_sur|floatformat:0|mul:0.8 }})">
+                                            <i class="fas fa-star me-1"></i>Bonne note (80%)
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="setAllNotes({{ evaluation.note_sur|floatformat:0|mul:0.65 }})">
+                                            <i class="fas fa-check me-1"></i>Note correcte (65%)
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning" onclick="setAllNotes({{ evaluation.note_sur|floatformat:0|mul:0.5 }})">
+                                            <i class="fas fa-exclamation me-1"></i>Note faible (50%)
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="clearAllNotes()">
+                                            <i class="fas fa-times me-1"></i>Effacer tout
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons de soumission -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>Annuler
+                                    </a>
+                                    <div>
+                                        <button type="submit" name="save_continue" class="btn btn-outline-primary me-2">
+                                            <i class="fas fa-save me-1"></i>Enregistrer et continuer
+                                        </button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-check me-1"></i>Enregistrer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonctions pour les actions rapides
+function setGoodNote(eleveId) {
+    const noteInput = document.getElementById('note_' + eleveId);
+    const maxNote = {{ evaluation.note_sur }};
+    noteInput.value = (maxNote * 0.8).toFixed(2);
+}
+
+function setAverageNote(eleveId) {
+    const noteInput = document.getElementById('note_' + eleveId);
+    const maxNote = {{ evaluation.note_sur }};
+    noteInput.value = (maxNote * 0.6).toFixed(2);
+}
+
+function setAllNotes(noteValue) {
+    const noteInputs = document.querySelectorAll('input[name^="note_"]');
+    noteInputs.forEach(input => {
+        if (!input.disabled) {
+            input.value = noteValue.toFixed(2);
+        }
+    });
+}
+
+function clearAllNotes() {
+    const noteInputs = document.querySelectorAll('input[name^="note_"]');
+    const commentInputs = document.querySelectorAll('textarea[name^="commentaire_"]');
+    const absentInputs = document.querySelectorAll('input[name^="absent_"]');
+    
+    noteInputs.forEach(input => input.value = '');
+    commentInputs.forEach(input => input.value = '');
+    absentInputs.forEach(input => input.checked = false);
+}
+
+// Validation des notes
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('notesForm');
+    const noteInputs = document.querySelectorAll('input[name^="note_"]');
+    
+    // Validation en temps réel
+    noteInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            const maxNote = {{ evaluation.note_sur }};
+            
+            if (value > maxNote) {
+                this.value = maxNote;
+                alert(`La note ne peut pas dépasser ${maxNote}`);
+            }
+            
+            if (value < 0) {
+                this.value = 0;
+            }
+        });
+    });
+    
+    // Validation à la soumission
+    form.addEventListener('submit', function(e) {
+        let hasError = false;
+        
+        noteInputs.forEach(input => {
+            const value = parseFloat(input.value);
+            const maxNote = {{ evaluation.note_sur }};
+            
+            if (input.value && (value < 0 || value > maxNote)) {
+                hasError = true;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+        
+        if (hasError) {
+            e.preventDefault();
+            alert('Veuillez corriger les erreurs dans les notes avant de soumettre.');
+        }
+    });
+});
+</script>
+{% endblock %}

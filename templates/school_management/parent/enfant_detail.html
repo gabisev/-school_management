@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ enfant.user.get_full_name|default:enfant.user.username }} - Détail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-child me-2"></i>
+            {{ enfant.user.get_full_name|default:enfant.user.username }}
+        </h1>
+        <div>
+            <a href="{% url 'school_management:parent_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations de l'enfant -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    {% if enfant.photo %}
+                        <img src="{{ enfant.photo.url }}" class="rounded-circle mb-3" width="120" height="120" alt="{{ enfant.user.get_full_name }}">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <h4 class="mb-1">{{ enfant.user.get_full_name|default:enfant.user.username }}</h4>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        {{ enfant.classe.nom }} ({{ enfant.classe.niveau }})
+                    </p>
+                    <p class="text-muted">
+                        <i class="fas fa-id-card me-1"></i>
+                        N° {{ enfant.numero_etudiant }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>Statistiques
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-graduation-cap fa-2x text-primary mb-2"></i>
+                                <h5 class="mb-1">{{ total_notes }}</h5>
+                                <small class="text-muted">Notes totales</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h5 class="mb-1">{{ notes_validees }}</h5>
+                                <small class="text-muted">Notes validées</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                <h5 class="mb-1">{{ total_absences }}</h5>
+                                <small class="text-muted">Absences totales</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-check fa-2x text-info mb-2"></i>
+                                <h5 class="mb-1">{{ absences_justifiees }}</h5>
+                                <small class="text-muted">Absences justifiées</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Moyennes par matière -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-chart-line me-2"></i>Moyennes par Matière
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if moyennes_par_matiere %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Matière</th>
+                                        <th>Moyenne</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for matiere, moyenne in moyennes_par_matiere.items %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ matiere.nom }}</strong>
+                                                <br>
+                                                <small class="text-muted">Coeff. {{ matiere.coefficient }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="h5 mb-0">{{ moyenne }}/20</span>
+                                            </td>
+                                            <td>
+                                                {% if moyenne >= 16 %}
+                                                    <span class="badge bg-success">Excellent</span>
+                                                {% elif moyenne >= 14 %}
+                                                    <span class="badge bg-success">Très bien</span>
+                                                {% elif moyenne >= 12 %}
+                                                    <span class="badge bg-success">Bien</span>
+                                                {% elif moyenne >= 10 %}
+                                                    <span class="badge bg-warning">Assez bien</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Insuffisant</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Aucune moyenne disponible pour le moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes récentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Notes Récentes
+                    </h6>
+                    <a href="{% url 'school_management:parent_notes' %}?eleve={{ enfant.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-list me-1"></i> Voir toutes
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if notes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Matière</th>
+                                        <th>Note</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for note in notes|slice:":10" %}
+                                        <tr>
+                                            <td>{{ note.evaluation.matiere.nom }}</td>
+                                            <td>
+                                                {% if note.note %}
+                                                    <span class="badge bg-{% if note.note >= 12 %}success{% elif note.note >= 10 %}warning{% else %}danger{% endif %}">
+                                                        {{ note.note }}/20
+                                                    </span>
+                                                {% elif note.absent %}
+                                                    <span class="badge bg-secondary">Absent</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">Non noté</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ note.date_saisie|date:"d/m/Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-graduation-cap fa-3x mb-3"></i>
+                            <p>Aucune note disponible.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Absences récentes -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Absences Récentes
+                    </h6>
+                    <a href="{% url 'school_management:parent_absences' %}?eleve={{ enfant.id }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-list me-1"></i> Voir toutes
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if absences %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Motif</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for absence in absences|slice:":10" %}
+                                        <tr>
+                                            <td>{{ absence.date_debut|date:"d/m/Y" }}</td>
+                                            <td>{{ absence.get_motif_display }}</td>
+                                            <td>
+                                                {% if absence.justifiee %}
+                                                    <span class="badge bg-success">Justifiée</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Non justifiée</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <p>Aucune absence enregistrée.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Évaluations à venir -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-calendar-alt me-2"></i>Évaluations à Venir
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if evaluations %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Matière</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evaluation in evaluations|slice:":10" %}
+                                        <tr>
+                                            <td>{{ evaluation.matiere.nom }}</td>
+                                            <td>
+                                                <span class="badge bg-info">{{ evaluation.get_type_evaluation_display }}</span>
+                                            </td>
+                                            <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-alt fa-3x mb-3"></i>
+                            <p>Aucune évaluation programmée.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

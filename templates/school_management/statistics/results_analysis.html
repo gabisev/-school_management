@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Analyse des résultats{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-chart-line text-success me-2"></i>
+                    Analyse des résultats
+                </h1>
+                <a href="{% url 'school_management:rapports' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Retour aux rapports
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques générales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_notes }}</h4>
+                            <p class="card-text">Total des notes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ moyenne_generale|floatformat:2 }}/20</h4>
+                            <p class="card-text">Moyenne générale</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ note_max|floatformat:1 }}/20</h4>
+                            <p class="card-text">Note maximale</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-up fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ note_min|floatformat:1 }}/20</h4>
+                            <p class="card-text">Note minimale</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-arrow-down fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Répartition des notes -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-2"></i>Répartition des notes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="notesChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-chart-line me-2"></i>Évolution des moyennes (6 derniers mois)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="evolutionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top 10 des meilleurs élèves -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-trophy me-2"></i>Top 10 des meilleurs élèves
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Rang</th>
+                                    <th>Élève</th>
+                                    <th>Classe</th>
+                                    <th>Moyenne</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in meilleurs_eleves %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-{% if forloop.counter <= 3 %}warning{% elif forloop.counter <= 6 %}info{% else %}secondary{% endif %}">
+                                                {{ forloop.counter }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.eleve.get_full_name }}</td>
+                                        <td>{{ item.eleve.classe.nom }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ item.moyenne|floatformat:2 }}/20</span>
+                                        </td>
+                                        <td>{{ item.nb_notes }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Aucune donnée disponible</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Élèves en difficulté -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Élèves en difficulté
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Élève</th>
+                                    <th>Classe</th>
+                                    <th>Moyenne</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in eleves_difficulte %}
+                                    <tr>
+                                        <td>{{ item.eleve.get_full_name }}</td>
+                                        <td>{{ item.eleve.classe.nom }}</td>
+                                        <td>
+                                            <span class="badge bg-danger">{{ item.moyenne|floatformat:2 }}/20</span>
+                                        </td>
+                                        <td>{{ item.nb_notes }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Aucun élève en difficulté</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance par matière -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-book me-2"></i>Performance par matière
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Matière</th>
+                                    <th>Moyenne</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Nombre de notes</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in performance_matieres %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.matiere.nom }}</strong>
+                                            {% if item.matiere.coefficient > 1 %}
+                                                <span class="badge bg-info ms-2">Coef. {{ item.matiere.coefficient }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if item.moyenne >= 16 %}success{% elif item.moyenne >= 14 %}primary{% elif item.moyenne >= 12 %}info{% elif item.moyenne >= 10 %}warning{% else %}danger{% endif %}">
+                                                {{ item.moyenne|floatformat:2 }}/20
+                                            </span>
+                                        </td>
+                                        <td>{{ item.min|floatformat:1 }}</td>
+                                        <td>{{ item.max|floatformat:1 }}</td>
+                                        <td>{{ item.count }}</td>
+                                        <td>
+                                            {% if item.moyenne >= 16 %}
+                                                <span class="text-success"><i class="fas fa-star me-1"></i>Excellent</span>
+                                            {% elif item.moyenne >= 14 %}
+                                                <span class="text-primary"><i class="fas fa-thumbs-up me-1"></i>Très bien</span>
+                                            {% elif item.moyenne >= 12 %}
+                                                <span class="text-info"><i class="fas fa-check me-1"></i>Bien</span>
+                                            {% elif item.moyenne >= 10 %}
+                                                <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Assez bien</span>
+                                            {% else %}
+                                                <span class="text-danger"><i class="fas fa-times me-1"></i>Insuffisant</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Aucune donnée disponible</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Performance par classe -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-users me-2"></i>Performance par classe
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Moyenne</th>
+                                    <th>Élèves</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in performance_classes %}
+                                    <tr>
+                                        <td>{{ item.classe.nom }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if item.moyenne >= 16 %}success{% elif item.moyenne >= 14 %}primary{% elif item.moyenne >= 12 %}info{% elif item.moyenne >= 10 %}warning{% else %}danger{% endif %}">
+                                                {{ item.moyenne|floatformat:2 }}/20
+                                            </span>
+                                        </td>
+                                        <td>{{ item.nb_eleves }}</td>
+                                        <td>{{ item.count }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Aucune donnée disponible</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taux de réussite par classe -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-percentage me-2"></i>Taux de réussite par classe
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Taux de réussite</th>
+                                    <th>Réussite</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in taux_reussite_classes %}
+                                    <tr>
+                                        <td>{{ item.classe.nom }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if item.taux_reussite >= 80 %}success{% elif item.taux_reussite >= 60 %}warning{% else %}danger{% endif %}">
+                                                {{ item.taux_reussite|floatformat:1 }}%
+                                            </span>
+                                        </td>
+                                        <td>{{ item.eleves_reussite }}</td>
+                                        <td>{{ item.total_eleves }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Aucune donnée disponible</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Graphique de répartition des notes
+const notesCtx = document.getElementById('notesChart').getContext('2d');
+const notesChart = new Chart(notesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Excellent (16-20)', 'Très bien (14-16)', 'Bien (12-14)', 'Assez bien (10-12)', 'Insuffisant (<10)'],
+        datasets: [{
+            data: [{{ excellent }}, {{ tres_bien }}, {{ bien }}, {{ assez_bien }}, {{ insuffisant }}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(0, 123, 255, 0.8)',
+                'rgba(23, 162, 184, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(0, 123, 255, 1)',
+                'rgba(23, 162, 184, 1)',
+                'rgba(255, 193, 7, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// Graphique d'évolution des moyennes
+const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+const evolutionChart = new Chart(evolutionCtx, {
+    type: 'line',
+    data: {
+        labels: [
+            {% for mois in evolution_moyennes %}
+                '{{ mois.mois }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Moyenne générale',
+            data: [
+                {% for mois in evolution_moyennes %}
+                    {{ mois.moyenne|floatformat:2 }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 20
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
+
+
+

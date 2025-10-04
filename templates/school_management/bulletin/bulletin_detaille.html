@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulletin de {{ bulletin.eleve.prenom }} {{ bulletin.eleve.nom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Bulletin de {{ bulletin.eleve.prenom }} {{ bulletin.eleve.nom }}
+                    </h2>
+                    <p class="text-muted mb-0">BULLETIN DE NOTES - {{ bulletin.classe.nom }}</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'school_management:prof_principal_bulletins' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print me-2"></i>
+                        Imprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulletin détaillé -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0 text-center">
+                <i class="fas fa-graduation-cap me-2"></i>
+                BULLETIN DE NOTES - {{ bulletin.classe.nom }}
+            </h4>
+        </div>
+        <div class="card-body">
+            <!-- Informations de l'élève -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-user me-2"></i>
+                        Informations de l'élève
+                    </h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold">Nom complet :</td>
+                            <td>{{ bulletin.eleve.prenom }} {{ bulletin.eleve.nom }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Classe :</td>
+                            <td>{{ bulletin.classe.nom }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Numéro :</td>
+                            <td>{{ bulletin.eleve.numero_etudiant }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Date de naissance :</td>
+                            <td>{{ bulletin.eleve.date_naissance|date:"d/m/Y" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-calendar me-2"></i>
+                        Période
+                    </h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold">Année scolaire :</td>
+                            <td>{{ bulletin.annee_scolaire }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Date de génération :</td>
+                            <td>{{ bulletin.date_creation|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Total élèves :</td>
+                            <td>{{ bulletin.effectif_classe|default:"--" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes par matière -->
+            <div class="mb-4">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-book me-2"></i>
+                    Notes par matière
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Matière</th>
+                                <th>Notes</th>
+                                <th>Moyenne</th>
+                                <th>Appréciation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for matiere, notes_list in notes_par_matiere.items %}
+                                <tr>
+                                    <td class="fw-bold">
+                                        {{ matiere.nom }}
+                                        {% if matiere.coefficient != 1 %}
+                                            <small class="text-muted">Coef. {{ matiere.coefficient }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% for note in notes_list %}
+                                            <span class="badge bg-light text-dark me-1">{{ note.note }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="fw-bold">
+                                        {% for mat, moy in moyennes_par_matiere.items %}
+                                            {% if mat == matiere %}
+                                                {{ moy|floatformat:2 }}/20
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for mat, moy in moyennes_par_matiere.items %}
+                                            {% if mat == matiere %}
+                                                {% if moy >= 18 %}
+                                                    <span class="badge bg-success">Excellent</span>
+                                                {% elif moy >= 16 %}
+                                                    <span class="badge bg-primary">Très bien</span>
+                                                {% elif moy >= 14 %}
+                                                    <span class="badge bg-info">Bien</span>
+                                                {% elif moy >= 12 %}
+                                                    <span class="badge bg-warning">Assez bien</span>
+                                                {% elif moy >= 10 %}
+                                                    <span class="badge bg-secondary">Passable</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Insuffisant</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Résultats généraux -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-primary">Moyenne générale</h6>
+                            <h3 class="text-primary">{{ moyenne_generale|floatformat:2 }}/20</h3>
+                            <p class="mb-0">{{ moyenne_pourcentage }}%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title text-primary">Rang dans la classe</h6>
+                            <h3 class="text-primary">{{ bulletin.rang|default:"--" }}/{{ bulletin.effectif_classe|default:"--" }}</h3>
+                            <p class="mb-0">Moyenne de la classe: {{ bulletin.moyenne_classe|floatformat:2|default:"--" }}/20</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mention et décision -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-{{ couleur_mention }}">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Mention</h6>
+                            <h4 class="text-{{ couleur_mention }}">{{ mention }}</h4>
+                            <p class="mb-0">Moyenne générale : {{ moyenne_generale|floatformat:2 }}/20 ({{ moyenne_pourcentage }}%)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-{{ couleur_decision }}">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Décision de passage</h6>
+                            <h4 class="text-{{ couleur_decision }}">{{ decision_passage }}</h4>
+                            <p class="mb-0">
+                                Moyenne de {{ moyenne_pourcentage }}% avec {{ echecs }} échec(s) sur {{ nb_matieres }} matière(s).
+                                {% if decision_passage == "PASSE EN CLASSE SUPERIEURE" %}
+                                    L'élève passe en classe supérieure.
+                                {% elif decision_passage == "SECONDE SESSION" %}
+                                    L'élève doit passer une seconde session.
+                                {% else %}
+                                    L'élève redouble.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Décision de passage -->
+            <div class="card border-{{ couleur_decision }}">
+                <div class="card-header bg-{{ couleur_decision }} text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-gavel me-2"></i>
+                        Décision de passage
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Décision :</strong>
+                            <span class="badge bg-{{ couleur_decision }} fs-6">{{ decision_passage }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Échecs :</strong> {{ echecs }} sur {{ nb_matieres }} matière(s)
+                        </div>
+                    </div>
+                    {% if decision_passage == "SECONDE SESSION" %}
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Moyenne de {{ moyenne_pourcentage }}% avec {{ echecs }} échec(s) sur {{ nb_matieres }} matière(s). L'élève doit passer une seconde session.
+                        </div>
+                    {% elif decision_passage == "REDOUBLE" %}
+                        <div class="alert alert-danger mt-3 mb-0">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Moyenne insuffisante ({{ moyenne_pourcentage }}%). L'élève doit redoubler.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Moyenne de {{ moyenne_pourcentage }}% avec {{ echecs }} échec(s) sur {{ nb_matieres }} matière(s). L'élève passe en classe supérieure.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Appréciation générale -->
+            {% if bulletin.appreciation_generale %}
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-comment me-2"></i>
+                            Appréciation générale
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{ bulletin.appreciation_generale }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    /* Masquer les éléments non nécessaires à l'impression */
+    .btn-group, .d-flex .btn, .btn {
+        display: none !important;
+    }
+    
+    /* Optimiser pour une page unique */
+    body {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        margin: 0 !important;
+        padding: 10px !important;
+    }
+    
+    .container-fluid {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Réduire les marges et espacements */
+    .card {
+        border: 1px solid #000 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #000 !important;
+        padding: 8px 12px !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .card-body {
+        padding: 10px !important;
+    }
+    
+    /* Optimiser les titres */
+    h2, h3, h4, h5, h6 {
+        margin: 5px 0 !important;
+        page-break-after: avoid !important;
+    }
+    
+    h2 {
+        font-size: 18px !important;
+    }
+    
+    h4 {
+        font-size: 14px !important;
+    }
+    
+    h5 {
+        font-size: 12px !important;
+    }
+    
+    /* Optimiser les tableaux */
+    .table {
+        font-size: 10px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .table th, .table td {
+        padding: 4px 6px !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .table-responsive {
+        overflow: visible !important;
+    }
+    
+    /* Optimiser les lignes et colonnes */
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-md-6, .col-md-4, .col-md-3 {
+        padding: 0 5px !important;
+    }
+    
+    .mb-4, .mb-3 {
+        margin-bottom: 8px !important;
+    }
+    
+    /* Optimiser les badges et alertes */
+    .badge {
+        font-size: 9px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .alert {
+        padding: 6px 8px !important;
+        margin: 4px 0 !important;
+        font-size: 10px !important;
+    }
+    
+    /* Éviter les sauts de page dans les sections importantes */
+    .card {
+        page-break-inside: avoid !important;
+    }
+    
+    /* Optimiser l'espacement des informations élève */
+    .table-borderless td {
+        padding: 2px 4px !important;
+    }
+    
+    /* Réduire la taille des icônes */
+    .fas {
+        font-size: 10px !important;
+    }
+    
+    /* Masquer les éléments décoratifs */
+    .text-primary, .text-success, .text-warning, .text-danger, .text-info {
+        color: #000 !important;
+    }
+    
+    .bg-primary, .bg-success, .bg-warning, .bg-danger, .bg-info {
+        background-color: #f8f9fa !important;
+    }
+}
+</style>
+{% endblock %}

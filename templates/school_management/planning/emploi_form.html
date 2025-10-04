@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier{% else %}Créer{% endif %} Emploi du Temps
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .form-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .conflict-warning {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+    }
+    .success-message {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-calendar-week me-2"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} Emploi du Temps
+                    </h2>
+                    <p class="text-muted">
+                        {% if object %}
+                            Modifiez les informations de cet emploi du temps
+                        {% else %}
+                            Créez un nouvel emploi du temps pour une classe
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:emploi_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages d'alerte -->
+            <div id="conflict-warning" class="conflict-warning">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i>Attention : Conflits détectés</h5>
+                <p class="mb-0" id="conflict-message">Des conflits ont été détectés avec d'autres emplois du temps.</p>
+            </div>
+
+            <div id="success-message" class="success-message">
+                <h5><i class="fas fa-check-circle me-2"></i>Aucun conflit</h5>
+                <p class="mb-0">Cet emploi du temps ne présente aucun conflit.</p>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card form-card">
+                <div class="card-header form-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        Informations de l'emploi du temps
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="emploi-form">
+                        {% csrf_token %}
+                        
+                        <!-- Section 1: Informations de base -->
+                        <div class="form-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Informations de Base
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.classe.id_for_label }}" class="form-label">
+                                            <i class="fas fa-users me-2"></i>Classe *
+                                        </label>
+                                        {{ form.classe }}
+                                        {% if form.classe.errors %}
+                                            <div class="text-danger small">{{ form.classe.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.matiere.id_for_label }}" class="form-label">
+                                            <i class="fas fa-book me-2"></i>Matière *
+                                        </label>
+                                        {{ form.matiere }}
+                                        {% if form.matiere.errors %}
+                                            <div class="text-danger small">{{ form.matiere.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.professeur.id_for_label }}" class="form-label">
+                                            <i class="fas fa-chalkboard-teacher me-2"></i>Professeur *
+                                        </label>
+                                        {{ form.professeur }}
+                                        {% if form.professeur.errors %}
+                                            <div class="text-danger small">{{ form.professeur.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.type_cours.id_for_label }}" class="form-label">
+                                            <i class="fas fa-tag me-2"></i>Type de cours
+                                        </label>
+                                        {{ form.type_cours }}
+                                        {% if form.type_cours.errors %}
+                                            <div class="text-danger small">{{ form.type_cours.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Planning -->
+                        <div class="form-section">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-clock me-2"></i>Planning
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.creneau.id_for_label }}" class="form-label">
+                                            <i class="fas fa-calendar-day me-2"></i>Créneau *
+                                        </label>
+                                        {{ form.creneau }}
+                                        {% if form.creneau.errors %}
+                                            <div class="text-danger small">{{ form.creneau.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.salle.id_for_label }}" class="form-label">
+                                            <i class="fas fa-door-open me-2"></i>Salle *
+                                        </label>
+                                        {{ form.salle }}
+                                        {% if form.salle.errors %}
+                                            <div class="text-danger small">{{ form.salle.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Période -->
+                        <div class="form-section">
+                            <h6 class="text-warning mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>Période
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.annee_scolaire.id_for_label }}" class="form-label">
+                                            <i class="fas fa-calendar me-2"></i>Année scolaire
+                                        </label>
+                                        {{ form.annee_scolaire }}
+                                        {% if form.annee_scolaire.errors %}
+                                            <div class="text-danger small">{{ form.annee_scolaire.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.semestre.id_for_label }}" class="form-label">
+                                            <i class="fas fa-calendar-week me-2"></i>Semestre
+                                        </label>
+                                        {{ form.semestre }}
+                                        {% if form.semestre.errors %}
+                                            <div class="text-danger small">{{ form.semestre.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Options -->
+                        <div class="form-section">
+                            <h6 class="text-info mb-3">
+                                <i class="fas fa-cog me-2"></i>Options
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        {{ form.actif }}
+                                        <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                            <i class="fas fa-toggle-on me-2"></i>Emploi actif
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.commentaire.id_for_label }}" class="form-label">
+                                    <i class="fas fa-comment me-2"></i>Commentaire
+                                </label>
+                                {{ form.commentaire }}
+                                {% if form.commentaire.errors %}
+                                    <div class="text-danger small">{{ form.commentaire.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:emploi_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-info me-2" id="check-conflicts">
+                                    <i class="fas fa-search me-2"></i>Vérifier les conflits
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('emploi-form');
+    const checkConflictsBtn = document.getElementById('check-conflicts');
+    const conflictWarning = document.getElementById('conflict-warning');
+    const successMessage = document.getElementById('success-message');
+    const conflictMessage = document.getElementById('conflict-message');
+
+    // Fonction pour vérifier les conflits
+    function checkConflicts() {
+        const classeId = document.getElementById('id_classe').value;
+        const professeurId = document.getElementById('id_professeur').value;
+        const salleId = document.getElementById('id_salle').value;
+        const creneauId = document.getElementById('id_creneau').value;
+        const anneeScolaire = document.getElementById('id_annee_scolaire').value;
+        const semestre = document.getElementById('id_semestre').value;
+
+        if (!classeId || !professeurId || !salleId || !creneauId) {
+            alert('Veuillez remplir tous les champs obligatoires avant de vérifier les conflits.');
+            return;
+        }
+
+        // Afficher le loading
+        checkConflictsBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Vérification...';
+        checkConflictsBtn.disabled = true;
+
+        // Requête AJAX
+        fetch(`{% url 'school_management:conflits_emploi' %}?classe_id=${classeId}&professeur_id=${professeurId}&salle_id=${salleId}&creneau_id=${creneauId}&annee_scolaire=${anneeScolaire}&semestre=${semestre}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_conflits) {
+                    conflictMessage.innerHTML = data.conflits.join('<br>');
+                    conflictWarning.style.display = 'block';
+                    successMessage.style.display = 'none';
+                } else {
+                    conflictWarning.style.display = 'none';
+                    successMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la vérification des conflits:', error);
+                alert('Erreur lors de la vérification des conflits.');
+            })
+            .finally(() => {
+                checkConflictsBtn.innerHTML = '<i class="fas fa-search me-2"></i>Vérifier les conflits';
+                checkConflictsBtn.disabled = false;
+            });
+    }
+
+    // Événement pour le bouton de vérification
+    checkConflictsBtn.addEventListener('click', checkConflicts);
+
+    // Vérification automatique lors du changement des champs
+    const fieldsToWatch = ['id_classe', 'id_professeur', 'id_salle', 'id_creneau', 'id_annee_scolaire', 'id_semestre'];
+    fieldsToWatch.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', function() {
+                // Masquer les messages précédents
+                conflictWarning.style.display = 'none';
+                successMessage.style.display = 'none';
+            });
+        }
+    });
+
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        const requiredFields = ['id_classe', 'id_matiere', 'id_professeur', 'id_creneau', 'id_salle'];
+        let hasErrors = false;
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

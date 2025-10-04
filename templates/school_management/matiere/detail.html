@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ matiere.nom }} - Gestion École{% endblock %}
+
+{% block page_title %}Détails de la matière{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:matiere_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+<a href="{% url 'school_management:matiere_update' matiere.pk %}" class="btn btn-warning">
+    <i class="fas fa-edit me-1"></i>
+    Modifier
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0">
+                    <i class="fas fa-book me-2"></i>
+                    Informations générales
+                </h6>
+            </div>
+            <div class="card-body">
+                <h4>{{ matiere.nom }}</h4>
+                <p class="text-muted">Code: <code>{{ matiere.code }}</code></p>
+                <p><strong>Coefficient:</strong> <span class="badge bg-info">{{ matiere.coefficient }}</span></p>
+                {% if matiere.description %}
+                    <div class="mt-3">
+                        <strong>Description:</strong>
+                        <p class="text-muted">{{ matiere.description }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Professeurs -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>
+                    Professeurs enseignant cette matière
+                </h6>
+                <span class="badge bg-primary">{{ matiere.professeurs.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if matiere.professeurs.all %}
+                    <div class="row">
+                        {% for professeur in matiere.professeurs.all %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                {% if professeur.photo %}
+                                    <img src="{{ professeur.photo.url }}" alt="{{ professeur.nom_complet }}" 
+                                         class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3"
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-chalkboard-teacher text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-1">{{ professeur.civilite }} {{ professeur.user.last_name }}</h6>
+                                    <small class="text-muted">{{ professeur.user.first_name }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucun professeur assigné à cette matière</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Évaluations récentes -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Évaluations récentes
+                </h6>
+                <span class="badge bg-primary">{{ matiere.evaluations.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if matiere.evaluations.all %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Titre</th>
+                                    <th>Classe</th>
+                                    <th>Professeur</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluation in matiere.evaluations.all|slice:":5" %}
+                                <tr>
+                                    <td>{{ evaluation.titre|truncatechars:30 }}</td>
+                                    <td><span class="badge bg-secondary">{{ evaluation.classe.nom }}</span></td>
+                                    <td>{{ evaluation.professeur.civilite }} {{ evaluation.professeur.user.last_name }}</td>
+                                    <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" 
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-clipboard-check fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucune évaluation créée pour cette matière</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

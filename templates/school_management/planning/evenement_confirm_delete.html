@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'Événement{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .warning-section {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 5px solid #ffc107;
+    }
+    .event-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .priority-badge {
+        font-size: 0.8em;
+        padding: 0.25rem 0.5rem;
+    }
+    .priority-basse { background: linear-gradient(45deg, #6c757d, #5a6268); color: white; }
+    .priority-normale { background: linear-gradient(45deg, #007bff, #0056b3); color: white; }
+    .priority-haute { background: linear-gradient(45deg, #fd7e14, #e55a00); color: white; }
+    .priority-urgente { background: linear-gradient(45deg, #dc3545, #c82333); color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-trash me-2"></i>Supprimer l'Événement</h2>
+                    <p class="text-muted">Confirmez la suppression de cet événement</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:evenement_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Avertissement -->
+            <div class="warning-section">
+                <h5 class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Attention : Action irréversible
+                </h5>
+                <p class="mb-0">
+                    Vous êtes sur le point de supprimer définitivement cet événement du calendrier. 
+                    Cette action ne peut pas être annulée.
+                </p>
+            </div>
+
+            <!-- Aperçu de l'événement -->
+            <div class="event-preview">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>
+                    {{ object.titre }}
+                </h5>
+                <div class="h4 mt-2">
+                    {{ object.date_debut|date:"d/m/Y H:i" }}
+                </div>
+                <div class="small">
+                    {{ object.get_type_evenement_display }} • 
+                    <span class="priority-badge priority-{{ object.priorite|lower }}">
+                        {{ object.get_priorite_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Informations de l'événement -->
+            <div class="card delete-card">
+                <div class="card-header delete-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Événement à supprimer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Titre</label>
+                                <div class="alert alert-info">{{ object.titre }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type</label>
+                                <div class="alert alert-success">{{ object.get_type_evenement_display }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Priorité</label>
+                                <div>
+                                    <span class="priority-badge priority-{{ object.priorite|lower }}">
+                                        {{ object.get_priorite_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Date de début</label>
+                                <div class="alert alert-primary">{{ object.date_debut|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Date de fin</label>
+                                <div class="alert alert-warning">{{ object.date_fin|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Année scolaire</label>
+                                <div class="alert alert-secondary">{{ object.annee_scolaire }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if object.description %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Description</label>
+                                    <div class="alert alert-info">{{ object.description }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if object.lieu %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Lieu</label>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-map-marker-alt me-2"></i>{{ object.lieu }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if object.classes_concernees.exists %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Classes concernées</label>
+                                    <div>
+                                        {% for classe in object.classes_concernees.all %}
+                                            <span class="badge bg-info me-1">{{ classe.nom }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if object.professeurs_concernees.exists %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Professeurs concernés</label>
+                                    <div>
+                                        {% for prof in object.professeurs_concernees.all %}
+                                            <span class="badge bg-success me-1">{{ prof.nom_complet }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Formulaire de confirmation -->
+            <div class="card delete-card mt-4">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <h5 class="text-danger mb-3">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Êtes-vous sûr de vouloir supprimer cet événement ?
+                            </h5>
+                            <p class="text-muted mb-4">
+                                Cette action supprimera définitivement l'événement du calendrier scolaire.
+                            </p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'school_management:evenement_list' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-danger btn-lg" id="confirm-delete">
+                                    <i class="fas fa-trash me-2"></i>Oui, supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="card delete-card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations sur la suppression
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ce qui sera supprimé :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-danger me-2"></i>L'événement du calendrier</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les informations de l'événement</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les associations avec les classes</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les associations avec les professeurs</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Ce qui ne sera PAS supprimé :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-success me-2"></i>Les classes concernées</li>
+                                <li><i class="fas fa-times text-success me-2"></i>Les professeurs concernés</li>
+                                <li><i class="fas fa-times text-success me-2"></i>Les autres événements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    
+    // Confirmation supplémentaire
+    confirmDeleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Êtes-vous ABSOLUMENT sûr de vouloir supprimer cet événement ?\n\nCette action est irréversible !')) {
+            // Afficher un loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+            this.disabled = true;
+            
+            // Soumettre le formulaire
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

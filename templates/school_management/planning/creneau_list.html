@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Créneaux{% endblock %}
+
+{% block extra_css %}
+<style>
+    .creneau-card {
+        transition: transform 0.2s ease-in-out;
+        border-left: 4px solid #28a745;
+    }
+    .creneau-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .pause-badge {
+        background: linear-gradient(45deg, #ffc107, #e0a800);
+        color: white;
+    }
+    .time-display {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-clock me-2"></i>Gestion des Créneaux</h2>
+                    <p class="text-muted">Gérez les créneaux horaires de l'établissement</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:creneau_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouveau Créneau
+                    </a>
+                </div>
+            </div>
+
+            <!-- Liste des créneaux par jour -->
+            {% regroup creneaux by jour as creneaux_par_jour %}
+            
+            {% for jour, creneaux_jour in creneaux_par_jour %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            {{ jour|title }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for creneau in creneaux_jour %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card creneau-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="time-display">
+                                                    {{ creneau.heure_debut|time:"H:i" }} - {{ creneau.heure_fin|time:"H:i" }}
+                                                </div>
+                                                {% if creneau.pause %}
+                                                    <span class="badge pause-badge">
+                                                        <i class="fas fa-utensils me-1"></i>Pause
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-center">
+                                                <small class="text-muted">
+                                                    Durée: {{ creneau.duree_minutes }} minutes
+                                                </small>
+                                            </div>
+                                            <div class="d-flex justify-content-center mt-3">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'school_management:creneau_update' creneau.pk %}" 
+                                                       class="btn btn-outline-warning" title="Modifier">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:creneau_delete' creneau.pk %}" 
+                                                       class="btn btn-outline-danger" title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Aucun créneau trouvé</h4>
+                    <p class="text-muted">Commencez par créer vos premiers créneaux horaires.</p>
+                    <a href="{% url 'school_management:creneau_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Créer un créneau
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

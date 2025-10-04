@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajouter des participants - {{ conversation.titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-plus text-success me-2"></i>
+                        Ajouter des participants
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Conversation : {{ conversation.titre }}
+                        </h6>
+                        <p class="mb-0">
+                            Type : <span class="badge bg-secondary">{{ conversation.get_type_conversation_display }}</span>
+                            {% if conversation.classe %}
+                                • Classe : {{ conversation.classe.nom }}
+                            {% endif %}
+                            • Créateur : <strong>{{ conversation.createur.get_full_name }}</strong>
+                        </p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-users me-1"></i>
+                                Sélectionner les participants
+                            </label>
+                            
+                            <!-- Contrôles de sélection -->
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="select-all">
+                                    <i class="fas fa-check-square me-1"></i>Tout sélectionner
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="deselect-all">
+                                    <i class="fas fa-square me-1"></i>Tout désélectionner
+                                </button>
+                                <span class="badge bg-info ms-2" id="selection-count">0 sélectionné(s)</span>
+                            </div>
+                            
+                            <!-- Liste des participants avec checkboxes -->
+                            <div class="participants-list border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for choice in form.user %}
+                                    <div class="form-check participant-item">
+                                        {{ choice.tag }}
+                                        <label class="form-check-label d-flex align-items-center" for="{{ choice.id_for_label }}">
+                                            <div class="ms-2">
+                                                <strong>{{ choice.choice_label }}</strong>
+                                                <small class="text-muted d-block">
+                                                    {% if choice.data.value %}
+                                                        {% with user_id=choice.data.value %}
+                                                            {% for user in form.user.field.queryset %}
+                                                                {% if user.id == user_id %}
+                                                                    {% if user.eleve %}
+                                                                        <i class="fas fa-graduation-cap me-1"></i>Élève - {{ user.eleve.classe.nom }}
+                                                                    {% elif user.professeur %}
+                                                                        <i class="fas fa-chalkboard-teacher me-1"></i>Professeur
+                                                                    {% elif user.parent %}
+                                                                        <i class="fas fa-user-friends me-1"></i>Parent
+                                                                    {% else %}
+                                                                        <i class="fas fa-user-shield me-1"></i>Administrateur
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endwith %}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if form.user.errors %}
+                                <div class="text-danger mt-2">
+                                    {% for error in form.user.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Participants actuels -->
+                        <div class="mb-4">
+                            <h6>
+                                <i class="fas fa-users me-1"></i>
+                                Participants actuels ({{ conversation.get_participants.count }})
+                            </h6>
+                            <div class="list-group">
+                                {% for participant in conversation.get_participants %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">{{ participant.user.get_full_name }}</h6>
+                                            <small class="text-muted">
+                                                {% if participant.user.eleve %}
+                                                    <i class="fas fa-graduation-cap me-1"></i>Élève
+                                                {% elif participant.user.professeur %}
+                                                    <i class="fas fa-chalkboard-teacher me-1"></i>Professeur
+                                                {% elif participant.user.parent %}
+                                                    <i class="fas fa-user-friends me-1"></i>Parent
+                                                {% else %}
+                                                    <i class="fas fa-user-shield me-1"></i>Administrateur
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        {% if participant.user != user %}
+                                            <a href="{% url 'school_management:remove_participant' conversation.pk participant.user.pk %}" 
+                                               class="btn btn-outline-danger btn-sm"
+                                               onclick="return confirm('Êtes-vous sûr de vouloir retirer {{ participant.user.get_full_name }} de cette conversation ?')">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:conversation_detail' conversation.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Retour à la conversation
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Ajouter les participants
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.participants-list {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6 !important;
+}
+
+.participant-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.participant-item:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.participant-item:last-child {
+    margin-bottom: 0;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: #007bff;
+}
+
+.form-check-input:checked + .form-check-label .participant-item {
+    background-color: #e7f3ff;
+    border-color: #007bff;
+}
+
+.list-group-item {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    transition: all 0.15s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+#selection-count {
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+// Améliorer l'interface de sélection multiple avec checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.participant-checkbox');
+    const selectAllBtn = document.getElementById('select-all');
+    const deselectAllBtn = document.getElementById('deselect-all');
+    const selectionCount = document.getElementById('selection-count');
+    
+    function updateCounter() {
+        const selectedCount = document.querySelectorAll('.participant-checkbox:checked').length;
+        selectionCount.textContent = `${selectedCount} sélectionné(s)`;
+        
+        // Mettre à jour l'apparence des éléments sélectionnés
+        checkboxes.forEach(checkbox => {
+            const participantItem = checkbox.closest('.participant-item');
+            if (checkbox.checked) {
+                participantItem.style.backgroundColor = '#e7f3ff';
+                participantItem.style.borderColor = '#007bff';
+            } else {
+                participantItem.style.backgroundColor = 'white';
+                participantItem.style.borderColor = '#e9ecef';
+            }
+        });
+    }
+    
+    // Gérer les clics sur les checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateCounter);
+        
+        // Permettre de cliquer sur l'élément entier pour sélectionner
+        const participantItem = checkbox.closest('.participant-item');
+        participantItem.addEventListener('click', function(e) {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateCounter();
+            }
+        });
+    });
+    
+    // Bouton "Tout sélectionner"
+    selectAllBtn.addEventListener('click', function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        updateCounter();
+    });
+    
+    // Bouton "Tout désélectionner"
+    deselectAllBtn.addEventListener('click', function() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateCounter();
+    });
+    
+    // Appel initial
+    updateCounter();
+});
+</script>
+{% endblock %}

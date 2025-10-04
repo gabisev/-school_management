@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ classe.nom }} - Gestion École{% endblock %}
+
+{% block page_title %}Détails de la classe{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:classe_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+<a href="{% url 'school_management:classe_update' classe.pk %}" class="btn btn-warning">
+    <i class="fas fa-edit me-1"></i>
+    Modifier
+</a>
+<a href="{% url 'school_management:rapport_classe' classe.pk %}" class="btn btn-success">
+    <i class="fas fa-chart-bar me-1"></i>
+    Rapport
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Informations générales -->
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="m-0">
+                    <i class="fas fa-users me-2"></i>
+                    {{ classe.nom }}
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-primary">{{ classe.effectif_actuel }}</h3>
+                            <small class="text-muted">Élèves inscrits</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success">{{ classe.effectif_max }}</h3>
+                        <small class="text-muted">Capacité maximale</small>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Taux de remplissage</small>
+                        <small class="text-muted">
+                            {% widthratio classe.effectif_actuel classe.effectif_max 100 %}%
+                        </small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        {% widthratio classe.effectif_actuel classe.effectif_max 100 as percentage %}
+                        <div class="progress-bar 
+                            {% if percentage < 50 %}bg-success
+                            {% elif percentage < 80 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                             style="width: {{ percentage }}%">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row text-start mt-4">
+                    <div class="col-12 mb-2">
+                        <strong>Niveau :</strong><br>
+                        <span class="badge bg-info">{{ classe.niveau }}</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Année scolaire :</strong><br>
+                        {{ classe.annee_scolaire }}
+                    </div>
+                    <div class="col-12">
+                        <strong>Statut :</strong><br>
+                        {% if classe.effectif_actuel < classe.effectif_max %}
+                            <span class="badge bg-success">Places disponibles</span>
+                        {% else %}
+                            <span class="badge bg-danger">Classe complète</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Professeurs -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>
+                    Professeurs de la classe
+                </h6>
+                <span class="badge bg-primary">{{ professeurs|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if professeurs %}
+                    <div class="row">
+                        {% for professeur in professeurs %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                {% if professeur.photo %}
+                                    <img src="{{ professeur.photo.url }}" 
+                                         alt="{{ professeur.nom_complet }}" 
+                                         class="rounded-circle me-3"
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3"
+                                         style="width: 50px; height: 50px;">
+                                        <i class="fas fa-chalkboard-teacher text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ professeur.civilite }} {{ professeur.user.last_name }}
+                                        {% if professeur == classe.prof_principal %}
+                                            <span class="badge bg-warning ms-1">
+                                                <i class="fas fa-crown me-1"></i>Principal
+                                            </span>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">{{ professeur.user.first_name }}</small>
+                                    <div class="mt-1">
+                                        {% for matiere in professeur.matieres.all|slice:":2" %}
+                                            <span class="badge bg-info me-1">{{ matiere.nom }}</span>
+                                        {% endfor %}
+                                        {% if professeur.matieres.count > 2 %}
+                                            <span class="badge bg-secondary">+{{ professeur.matieres.count|add:"-2" }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucun professeur assigné à cette classe</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des élèves -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0">
+            <i class="fas fa-user-graduate me-2"></i>
+            Élèves de la classe
+        </h6>
+        <div>
+            <a href="{% url 'school_management:eleve_create' %}?classe={{ classe.pk }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Ajouter un élève
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if eleves %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Nom complet</th>
+                            <th>Numéro étudiant</th>
+                            <th>Date de naissance</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for eleve in eleves %}
+                        <tr>
+                            <td>
+                                {% if eleve.photo %}
+                                    <img src="{{ eleve.photo.url }}" 
+                                         alt="{{ eleve.nom_complet }}" 
+                                         class="rounded-circle"
+                                         style="width: 35px; height: 35px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                                         style="width: 35px; height: 35px;">
+                                        <i class="fas fa-user text-white small"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ eleve.nom }} {{ eleve.prenom }}</strong>
+                                <br>
+                                <small class="text-muted">{{ eleve.age }} ans</small>
+                            </td>
+                            <td>
+                                {% if user.is_authenticated and user.eleve and user.eleve.id == eleve.id %}
+                                    <code>{{ eleve.numero_etudiant }}</code>
+                                {% else %}
+                                    <span class="text-muted">***</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ eleve.date_naissance|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if user.is_authenticated and user.eleve and user.eleve.id == eleve.id %}
+                                    {% if eleve.telephone %}
+                                        <small>{{ eleve.telephone }}</small>
+                                    {% endif %}
+                                    {% if eleve.email %}
+                                        <br><small><a href="mailto:{{ eleve.email }}">{{ eleve.email }}</a></small>
+                                    {% endif %}
+                                    {% if not eleve.telephone and not eleve.email %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">***</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_authenticated and user.eleve and user.eleve.id == eleve.id %}
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'school_management:eleve_detail' eleve.pk %}" 
+                                           class="btn btn-outline-info" 
+                                           title="Voir mes détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'school_management:notes_eleve' eleve.pk %}" 
+                                           class="btn btn-outline-success" 
+                                           title="Voir mes notes">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                    </div>
+                                {% elif user.is_staff or user.is_superuser %}
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'school_management:eleve_detail' eleve.pk %}" 
+                                           class="btn btn-outline-info" 
+                                           title="Voir les détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'school_management:notes_eleve' eleve.pk %}" 
+                                           class="btn btn-outline-success" 
+                                           title="Voir les notes">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                        <a href="{% url 'school_management:eleve_update' eleve.pk %}" 
+                                           class="btn btn-outline-warning" 
+                                           title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun élève dans cette classe</h5>
+                <p class="text-muted">Commencez par inscrire des élèves à cette classe.</p>
+                <a href="{% url 'school_management:eleve_create' %}?classe={{ classe.pk }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Inscrire le premier élève
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Évaluations récentes -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0">
+            <i class="fas fa-clipboard-check me-2"></i>
+            Évaluations récentes
+        </h6>
+        <a href="{% url 'school_management:evaluation_list' %}?classe={{ classe.pk }}" class="btn btn-sm btn-primary">
+            Voir toutes
+        </a>
+    </div>
+    <div class="card-body">
+        {% if classe.evaluations.all %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Matière</th>
+                            <th>Professeur</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evaluation in classe.evaluations.all|slice:":5" %}
+                        <tr>
+                            <td>{{ evaluation.titre|truncatechars:30 }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ evaluation.matiere.nom }}</span>
+                            </td>
+                            <td>{{ evaluation.professeur.civilite }} {{ evaluation.professeur.user.last_name }}</td>
+                            <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ evaluation.get_type_evaluation_display }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" 
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-3">
+                <i class="fas fa-clipboard-check fa-2x text-muted mb-2"></i>
+                <p class="text-muted">Aucune évaluation programmée</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

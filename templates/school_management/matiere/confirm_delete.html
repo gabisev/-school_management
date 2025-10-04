@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ object.nom }} - Gestion École{% endblock %}
+
+{% block page_title %}Supprimer la matière{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:matiere_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+<a href="{% url 'school_management:matiere_detail' object.pk %}" class="btn btn-info">
+    <i class="fas fa-eye me-1"></i>
+    Voir les détails
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="m-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmation de suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Attention !</strong> Cette action est irréversible. Toutes les données associées à cette matière seront également supprimées.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                             style="width: 100px; height: 100px;">
+                            <i class="fas fa-book fa-3x text-white"></i>
+                        </div>
+                        <h5>{{ object.nom }}</h5>
+                        <p class="text-muted">Code: {{ object.code }}</p>
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Informations de la matière à supprimer :</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Nom :</strong> {{ object.nom }}</li>
+                            <li><strong>Code :</strong> {{ object.code }}</li>
+                            <li><strong>Coefficient :</strong> {{ object.coefficient }}</li>
+                            {% if object.description %}
+                                <li><strong>Description :</strong> {{ object.description|truncatechars:100 }}</li>
+                            {% endif %}
+                        </ul>
+
+                        <h6 class="mt-3">Professeurs enseignant cette matière :</h6>
+                        {% if object.professeurs.all %}
+                            <div class="mb-2">
+                                {% for professeur in object.professeurs.all %}
+                                    <span class="badge bg-info me-1">{{ professeur.civilite }} {{ professeur.user.last_name }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">Aucun professeur assigné</p>
+                        {% endif %}
+
+                        <h6 class="mt-4 text-danger">Données qui seront supprimées :</h6>
+                        <ul class="text-danger">
+                            <li><strong>{{ object.evaluations.count }}</strong> évaluations seront supprimées</li>
+                            <li>Toutes les notes des évaluations de cette matière</li>
+                            <li>L'historique complet de la matière</li>
+                            <li>Les assignations des professeurs à cette matière</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'school_management:matiere_detail' object.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>
+                            Oui, supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation avant suppression
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(e) {
+            const confirmation = confirm(
+                'Êtes-vous absolument certain de vouloir supprimer cette matière ?\n\n' +
+                'Cette action supprimera définitivement :\n' +
+                '- La matière {{ object.nom }}\n' +
+                '- Toutes les évaluations ({{ object.evaluations.count }})\n' +
+                '- Toutes les notes associées\n' +
+                '- L\'historique complet\n\n' +
+                'Cette action ne peut pas être annulée !'
+            );
+            
+            if (!confirmation) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+

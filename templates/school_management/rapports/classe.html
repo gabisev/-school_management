@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Rapport de la classe {{ classe.nom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-school me-2"></i>Rapport de la classe {{ classe.nom }}
+                    </h4>
+                    <div>
+                        <button onclick="window.print()" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-print me-1"></i>Imprimer
+                        </button>
+                        <a href="{% url 'school_management:rapports' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Retour aux rapports
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Informations générales de la classe -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>Classe :</strong> {{ classe.nom }}<br>
+                                            <strong>Niveau :</strong> {{ classe.niveau }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Effectif :</strong> {{ classe.eleves.count }}/{{ classe.effectif_max }}<br>
+                                            <strong>Professeur principal :</strong> {{ classe.professeur_principal.user.get_full_name|default:"-" }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Année scolaire :</strong> {{ classe.annee_scolaire|default:"2024-2025" }}<br>
+                                            <strong>Salle :</strong> {{ classe.salle|default:"-" }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Date du rapport :</strong> {{ today|date:"d/m/Y" }}<br>
+                                            <strong>Heure :</strong> {{ today|time:"H:i" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques générales -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ classe.eleves.count }}</h3>
+                                    <p class="mb-0">Élèves inscrits</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ moyenne_classe|floatformat:2|default:"--" }}</h3>
+                                    <p class="mb-0">Moyenne générale</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_evaluations }}</h3>
+                                    <p class="mb-0">Évaluations</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_absences }}</h3>
+                                    <p class="mb-0">Absences</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des élèves avec leurs moyennes -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-users me-2"></i>Liste des élèves et moyennes
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Rang</th>
+                                                    <th>Élève</th>
+                                                    <th>N° Étudiant</th>
+                                                    <th>Moyenne générale</th>
+                                                    <th>Notes</th>
+                                                    <th>Absences</th>
+                                                    <th>Appréciation</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for eleve in eleves_avec_moyennes %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong class="
+                                                                {% if forloop.counter <= 3 %}text-success
+                                                                {% elif forloop.counter <= classe.eleves.count|floatformat:0|mul:0.5 %}text-primary
+                                                                {% else %}text-warning{% endif %}">
+                                                                #{{ forloop.counter }}
+                                                            </strong>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                {% if eleve.photo %}
+                                                                    <img src="{{ eleve.photo.url }}" alt="Photo" class="rounded-circle me-2" width="30" height="30">
+                                                                {% else %}
+                                                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                                                        {{ eleve.user.first_name.0 }}{{ eleve.user.last_name.0 }}
+                                                                    </div>
+                                                                {% endif %}
+                                                                <div>
+                                                                    <a href="{% url 'school_management:eleve_detail' eleve.pk %}" class="text-decoration-none fw-bold">
+                                                                        {{ eleve.user.get_full_name }}
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ eleve.numero_etudiant }}</td>
+                                                        <td>
+                                                            {% if eleve.moyenne %}
+                                                                <strong class="
+                                                                    {% if eleve.moyenne >= 15 %}text-success
+                                                                    {% elif eleve.moyenne >= 10 %}text-primary
+                                                                    {% elif eleve.moyenne >= 8 %}text-warning
+                                                                    {% else %}text-danger{% endif %}">
+                                                                    {{ eleve.moyenne|floatformat:2 }}/20
+                                                                </strong>
+                                                            {% else %}
+                                                                <span class="text-muted">--</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info">{{ eleve.nb_notes }} note(s)</span>
+                                                        </td>
+                                                        <td>
+                                                            {% if eleve.nb_absences > 0 %}
+                                                                <span class="badge bg-warning text-dark">{{ eleve.nb_absences }}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-success">0</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if eleve.moyenne %}
+                                                                {% if eleve.moyenne >= 15 %}
+                                                                    <span class="text-success">Très bien</span>
+                                                                {% elif eleve.moyenne >= 12 %}
+                                                                    <span class="text-primary">Bien</span>
+                                                                {% elif eleve.moyenne >= 10 %}
+                                                                    <span class="text-info">Assez bien</span>
+                                                                {% elif eleve.moyenne >= 8 %}
+                                                                    <span class="text-warning">Passable</span>
+                                                                {% else %}
+                                                                    <span class="text-danger">Insuffisant</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="text-muted">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">
+                                                            Aucun élève dans cette classe.
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Moyennes par matière -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-book me-2"></i>Moyennes par matière
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Matière</th>
+                                                    <th>Coefficient</th>
+                                                    <th>Professeur</th>
+                                                    <th>Nb d'évaluations</th>
+                                                    <th>Moyenne classe</th>
+                                                    <th>Note min</th>
+                                                    <th>Note max</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for matiere_stat in moyennes_par_matiere %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ matiere_stat.matiere.nom }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">{{ matiere_stat.matiere.code }}</small>
+                                                        </td>
+                                                        <td>{{ matiere_stat.matiere.coefficient }}</td>
+                                                        <td>
+                                                            {% for prof in matiere_stat.matiere.professeur_set.all %}
+                                                                {{ prof.user.get_full_name }}{% if not forloop.last %}, {% endif %}
+                                                            {% empty %}
+                                                                <span class="text-muted">Non assigné</span>
+                                                            {% endfor %}
+                                                        </td>
+                                                        <td>{{ matiere_stat.nb_evaluations }}</td>
+                                                        <td>
+                                                            {% if matiere_stat.moyenne %}
+                                                                <strong class="
+                                                                    {% if matiere_stat.moyenne >= 15 %}text-success
+                                                                    {% elif matiere_stat.moyenne >= 10 %}text-primary
+                                                                    {% else %}text-warning{% endif %}">
+                                                                    {{ matiere_stat.moyenne|floatformat:2 }}/20
+                                                                </strong>
+                                                            {% else %}
+                                                                <span class="text-muted">--</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if matiere_stat.note_min %}
+                                                                {{ matiere_stat.note_min|floatformat:2 }}
+                                                            {% else %}
+                                                                --
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if matiere_stat.note_max %}
+                                                                {{ matiere_stat.note_max|floatformat:2 }}
+                                                            {% else %}
+                                                                --
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">
+                                                            Aucune matière avec des évaluations.
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques d'assiduité -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user-times me-2"></i>Assiduité
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <h4 class="text-danger">{{ total_absences }}</h4>
+                                            <small>Absences</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <h4 class="text-warning">{{ absences_non_justifiees }}</h4>
+                                            <small>Non justifiées</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <h4 class="text-info">{{ retards }}</h4>
+                                            <small>Retards</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-pie me-2"></i>Répartition des résultats
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <h5 class="text-success">{{ excellents }}</h5>
+                                            <small>≥ 15/20</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-primary">{{ bons }}</h5>
+                                            <small>12-15/20</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-warning">{{ moyens }}</h5>
+                                            <small>10-12/20</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <h5 class="text-danger">{{ faibles }}</h5>
+                                            <small>< 10/20</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observations et recommandations -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-comment me-2"></i>Observations générales
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6>Analyse automatique :</h6>
+                                        <ul class="mb-0">
+                                            {% if moyenne_classe %}
+                                                {% if moyenne_classe >= 15 %}
+                                                    <li>Excellents résultats de la classe avec une moyenne de {{ moyenne_classe|floatformat:2 }}/20</li>
+                                                {% elif moyenne_classe >= 12 %}
+                                                    <li>Bons résultats généraux avec une moyenne de {{ moyenne_classe|floatformat:2 }}/20</li>
+                                                {% elif moyenne_classe >= 10 %}
+                                                    <li>Résultats satisfaisants avec une moyenne de {{ moyenne_classe|floatformat:2 }}/20</li>
+                                                {% else %}
+                                                    <li>Des efforts sont nécessaires pour améliorer la moyenne générale ({{ moyenne_classe|floatformat:2 }}/20)</li>
+                                                {% endif %}
+                                            {% endif %}
+                                            
+                                            {% if absences_non_justifiees > 0 %}
+                                                <li>Attention aux {{ absences_non_justifiees }} absence(s) non justifiée(s)</li>
+                                            {% endif %}
+                                            
+                                            {% if retards > 0 %}
+                                                <li>{{ retards }} retard(s) enregistré(s) - sensibiliser sur la ponctualité</li>
+                                            {% endif %}
+                                            
+                                            <li>Effectif : {{ classe.eleves.count }}/{{ classe.effectif_max }} élèves</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .d-flex.justify-content-between .btn, .card-header .btn {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .row {
+        margin-bottom: 1rem !important;
+    }
+}
+</style>
+{% endblock %}
+

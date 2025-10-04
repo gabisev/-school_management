@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord Administrateur{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                        Tableau de Bord Administrateur
+                    </h2>
+                    <p class="text-muted mb-0">Vue d'ensemble du système de gestion scolaire</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ "now"|date:"d/m/Y à H:i" }}
+                    </small>
+                </div>
+            </div>
+
+            <!-- Statistiques générales -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Élèves
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_eleves }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total Professeurs
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_professeurs }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Parents
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_parents }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Classes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_classes }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-school fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques académiques -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Évaluations
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_evaluations }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clipboard-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Notes Saisies
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_notes }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Bulletins Générés
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_bulletins }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Absences
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_absences }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Top 5 des meilleurs élèves -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-trophy me-2"></i>
+                                Top 5 des Meilleurs Élèves
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if top_eleves %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Rang</th>
+                                                <th>Élève</th>
+                                                <th>Classe</th>
+                                                <th>Moyenne</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for bulletin in top_eleves %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-{% if forloop.counter == 1 %}warning{% elif forloop.counter <= 3 %}success{% else %}primary{% endif %}">
+                                                            {{ forloop.counter }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ bulletin.eleve.nom_complet }}</td>
+                                                    <td>{{ bulletin.classe.nom }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{% if bulletin.moyenne_generale >= 16 %}success{% elif bulletin.moyenne_generale >= 14 %}info{% elif bulletin.moyenne_generale >= 12 %}warning{% else %}danger{% endif %}">
+                                                            {{ bulletin.moyenne_generale }}/20
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">Aucun bulletin validé disponible</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistiques par classe -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Moyennes par Classe
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if classes_stats %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Classe</th>
+                                                <th>Effectif</th>
+                                                <th>Moyenne</th>
+                                                <th>Bulletins</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for stat in classes_stats %}
+                                                <tr>
+                                                    <td>{{ stat.classe.nom }}</td>
+                                                    <td>{{ stat.effectif }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{% if stat.moyenne >= 14 %}success{% elif stat.moyenne >= 12 %}info{% elif stat.moyenne >= 10 %}warning{% else %}danger{% endif %}">
+                                                            {{ stat.moyenne }}/20
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ stat.bulletins_valides }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">Aucune donnée disponible</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-bolt me-2"></i>
+                                Actions Rapides
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <a href="{% url 'school_management:eleve_list' %}" class="btn btn-primary btn-block">
+                                        <i class="fas fa-user-graduate me-2"></i>
+                                        Gérer les Élèves
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="{% url 'school_management:professeur_list' %}" class="btn btn-success btn-block">
+                                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                                        Gérer les Professeurs
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="{% url 'school_management:classe_list' %}" class="btn btn-info btn-block">
+                                        <i class="fas fa-school me-2"></i>
+                                        Gérer les Classes
+                                    </a>
+                                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'school_management:admin_prof_principal' %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-user-tie me-2"></i>
+                        Professeurs Principaux
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="{% url 'school_management:admin_user_management' %}" class="btn btn-info btn-block">
+                        <i class="fas fa-users-cog me-2"></i>
+                        Gestion des Utilisateurs
+                    </a>
+                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <a href="{% url 'school_management:admin_statistics' %}" class="btn btn-warning btn-block">
+                                        <i class="fas fa-chart-line me-2"></i>
+                                        Statistiques Détaillées
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="{% url 'school_management:admin_users' %}" class="btn btn-dark btn-block">
+                                        <i class="fas fa-users me-2"></i>
+                                        Gestion Utilisateurs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+</style>
+{% endblock %}
+

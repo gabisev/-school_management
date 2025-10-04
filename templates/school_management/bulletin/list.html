@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Bulletins{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Mes Bulletins
+                    </h2>
+                    <p class="text-muted mb-0">Consultez vos bulletins de notes par trimestre</p>
+                </div>
+                {% if is_eleve %}
+                    <div class="text-end">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Vos bulletins sont générés automatiquement à la fin de chaque trimestre
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if bulletins %}
+                <div class="row">
+                    {% for bulletin in bulletins %}
+                        <div class="col-lg-6 col-xl-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-header bg-gradient-primary text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-calendar-alt me-2"></i>
+                                                Trimestre {{ bulletin.trimestre }}
+                                            </h6>
+                                            <small class="opacity-75">{{ bulletin.annee_scolaire }}</small>
+                                        </div>
+                                        <span class="badge bg-{% if bulletin.statut == 'VALIDE' %}success{% elif bulletin.statut == 'EN_ATTENTE' %}warning{% else %}secondary{% endif %}">
+                                            {{ bulletin.get_statut_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body">
+                                    {% if is_parent %}
+                                        <div class="mb-3">
+                                            <h6 class="text-primary mb-1">
+                                                <i class="fas fa-user-graduate me-2"></i>
+                                                {{ bulletin.eleve.nom_complet }}
+                                            </h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-graduation-cap me-1"></i>
+                                                {{ bulletin.classe.nom }} ({{ bulletin.classe.niveau }})
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <h4 class="mb-0 text-{% if bulletin.moyenne_generale >= 12 %}success{% elif bulletin.moyenne_generale >= 10 %}warning{% else %}danger{% endif %}">
+                                                    {{ bulletin.moyenne_generale|default:"--" }}
+                                                </h4>
+                                                <small class="text-muted">Moyenne</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border-end">
+                                                <h4 class="mb-0 text-info">
+                                                    {{ bulletin.rang|default:"--" }}{% if bulletin.rang %}/{{ bulletin.effectif_classe }}{% endif %}
+                                                </h4>
+                                                <small class="text-muted">Rang</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <h4 class="mb-0 text-secondary">
+                                                {{ bulletin.moyenne_classe|default:"--" }}
+                                            </h4>
+                                            <small class="text-muted">Classe</small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if bulletin.appreciation_generale %}
+                                        <div class="mb-3">
+                                            <h6 class="text-muted mb-2">
+                                                <i class="fas fa-comment me-1"></i>
+                                                Appréciation générale
+                                            </h6>
+                                            <p class="small mb-0 text-muted">
+                                                {{ bulletin.appreciation_generale|truncatewords:20 }}
+                                            </p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ bulletin.date_creation|date:"d/m/Y" }}
+                                        </small>
+                                        <a href="{% url 'school_management:bulletin_detail' bulletin.pk %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Voir le détail
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Pagination des bulletins">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-file-alt fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">Aucun bulletin disponible</h4>
+                    <p class="text-muted mb-4">
+                        {% if is_eleve %}
+                            Vos bulletins seront disponibles à la fin de chaque trimestre, 
+                            une fois que tous vos professeurs auront saisi vos notes.
+                        {% elif is_parent %}
+                            Les bulletins de vos enfants seront disponibles à la fin de chaque trimestre, 
+                            une fois que tous les professeurs auront saisi les notes.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'school_management:eleve_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour au tableau de bord
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,1119 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier{% else %}Créer{% endif %} Événement
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        border: none;
+        overflow: hidden;
+        background: white;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    
+    .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0;
+        padding: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+    .form-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+    .form-header h5 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.4rem;
+    }
+    .event-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+    .event-preview:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+    .event-preview::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+        0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(30deg); }
+        50% { transform: translateX(100%) translateY(100%) rotate(30deg); }
+    }
+    .priority-badge {
+        font-size: 0.8em;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .priority-basse { background: linear-gradient(45deg, #6c757d, #5a6268); color: white; }
+    .priority-normale { background: linear-gradient(45deg, #007bff, #0056b3); color: white; }
+    .priority-haute { background: linear-gradient(45deg, #fd7e14, #e55a00); color: white; }
+    .priority-urgente { background: linear-gradient(45deg, #dc3545, #c82333); color: white; }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    .form-section:hover {
+        background: #f1f3f4;
+        transform: translateX(5px);
+    }
+    .form-section h6 {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+    .form-section h6 i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: #fafbff;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+    .form-label i {
+        margin-right: 8px;
+        color: #667eea;
+        width: 16px;
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    .form-check-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .btn {
+        border-radius: 10px;
+        padding: 12px 25px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    .btn:hover::before {
+        left: 100%;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+    }
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(108, 117, 125, 0.6);
+    }
+    
+    .color-picker {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .color-option:hover {
+        transform: scale(1.1);
+        border-color: #667eea;
+    }
+    .color-option.selected {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+    .color-option::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: bold;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .color-option.selected::after {
+        opacity: 1;
+    }
+    
+    .floating-label {
+        position: relative;
+        margin-bottom: 25px;
+    }
+    .floating-label input, .floating-label select, .floating-label textarea {
+        padding-top: 25px;
+        padding-bottom: 10px;
+    }
+    .floating-label label {
+        position: absolute;
+        top: 8px;
+        left: 15px;
+        font-size: 0.8rem;
+        color: #667eea;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+    
+    .progress-bar {
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+        margin-bottom: 20px;
+        transition: width 0.3s ease;
+    }
+    
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #667eea, transparent);
+        margin: 30px 0;
+        border-radius: 1px;
+    }
+    
+    .form-floating {
+        position: relative;
+    }
+    .form-floating > .form-control, .form-floating > .form-select {
+        height: calc(3.5rem + 2px);
+        line-height: 1.25;
+    }
+    .form-floating > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem 0.75rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .form-card {
+            margin: 10px;
+            border-radius: 15px;
+        }
+        
+        .form-header {
+            padding: 20px;
+        }
+        
+        .form-header h5 {
+            font-size: 1.2rem;
+        }
+        
+        .event-preview {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section h6 {
+            font-size: 1rem;
+        }
+        
+        .color-picker {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .color-option {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+        
+        .container-fluid {
+            padding: 0 10px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .form-card {
+            margin: 5px;
+            border-radius: 10px;
+        }
+        
+        .form-header {
+            padding: 15px;
+        }
+        
+        .form-header h5 {
+            font-size: 1.1rem;
+        }
+        
+        .event-preview {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-section {
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-section h6 {
+            font-size: 0.95rem;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        
+        .form-floating > .form-control, .form-floating > .form-select {
+            height: calc(3rem + 2px);
+        }
+        
+        .form-floating > label {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+    
+    /* Fix for overflow issues */
+    .form-control, .form-select, .form-check-input {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .col-md-6, .col-md-4, .col-md-3, .col-12 {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    
+    /* Fix for long text */
+    .form-control, .form-select {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix for checkbox labels */
+    .form-check-label {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
+    /* Select multiple styling */
+    .select-multiple {
+        min-height: 200px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        transition: all 0.3s ease;
+    }
+    
+    .select-multiple:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background-color: white;
+    }
+    
+    .select-multiple option {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .select-multiple option:hover {
+        background-color: #e3f2fd;
+    }
+    
+    .select-multiple option:checked {
+        background-color: #667eea;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .select-multiple option:checked:hover {
+        background-color: #5a6fd8;
+    }
+    
+    /* Custom scrollbar for select multiple */
+    .select-multiple::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .select-multiple::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .select-multiple::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
+    }
+    
+    .select-multiple::-webkit-scrollbar-thumb:hover {
+        background: #5a6fd8;
+    }
+    
+    /* Help text for select multiple */
+    .select-help {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    
+    /* Options d'affichage styling */
+    .form-check.bg-light {
+        background-color: #f8f9fa !important;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-check.bg-light:hover {
+        background-color: #e9ecef !important;
+        border-color: #667eea;
+    }
+    
+    .form-check.bg-light .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .form-check.bg-light .form-check-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    /* Fix for form sections spacing */
+    .form-section {
+        margin-bottom: 25px;
+    }
+    
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label,
+    .form-floating > .form-select ~ label {
+        opacity: 0.65;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="fas fa-calendar-plus me-2 text-primary"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} Événement
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if object %}
+                            Modifiez les informations de cet événement
+                        {% else %}
+                            Créez un nouvel événement pour le calendrier scolaire
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:evenement_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="progress mb-4" style="height: 6px;">
+                <div class="progress-bar" id="form-progress" role="progressbar" style="width: 0%"></div>
+            </div>
+
+            <!-- Aperçu de l'événement -->
+            <div class="event-preview" id="event-preview">
+                <div class="position-relative">
+                    <h5 class="mb-2">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        <span id="preview-titre">Titre de l'événement</span>
+                    </h5>
+                    <div class="h4 mb-2">
+                        <span id="preview-date">Date</span>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-3">
+                        <span id="preview-type" class="badge bg-light text-dark">Type</span>
+                        <span id="preview-priority" class="priority-badge">Priorité</span>
+                    </div>
+                    <div class="mt-2">
+                        <small id="preview-lieu" class="opacity-75">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            <span>Lieu</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card form-card">
+                <div class="card-header form-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        Informations de l'événement
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="evenement-form">
+                        {% csrf_token %}
+                        
+                        <!-- Section 1: Informations de base -->
+                        <div class="form-section">
+                            <h6><i class="fas fa-info-circle"></i>Informations de base</h6>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-floating mb-3">
+                                        {{ form.titre }}
+                                        <label for="{{ form.titre.id_for_label }}">
+                                            <i class="fas fa-heading me-2"></i>Titre de l'événement *
+                                        </label>
+                                        {% if form.titre.errors %}
+                                            <div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        {{ form.type_evenement }}
+                                        <label for="{{ form.type_evenement.id_for_label }}">
+                                            <i class="fas fa-tag me-2"></i>Type d'événement *
+                                        </label>
+                                        {% if form.type_evenement.errors %}
+                                            <div class="text-danger small mt-1">{{ form.type_evenement.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        {{ form.priorite }}
+                                        <label for="{{ form.priorite.id_for_label }}">
+                                            <i class="fas fa-exclamation-circle me-2"></i>Priorité
+                                        </label>
+                                        {% if form.priorite.errors %}
+                                            <div class="text-danger small mt-1">{{ form.priorite.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        {{ form.annee_scolaire }}
+                                        <label for="{{ form.annee_scolaire.id_for_label }}">
+                                            <i class="fas fa-calendar me-2"></i>Année scolaire
+                                        </label>
+                                        {% if form.annee_scolaire.errors %}
+                                            <div class="text-danger small mt-1">{{ form.annee_scolaire.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Section 2: Dates et heures -->
+                        <div class="form-section">
+                            <h6><i class="fas fa-clock"></i>Dates et heures</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        {{ form.date_debut }}
+                                        <label for="{{ form.date_debut.id_for_label }}">
+                                            <i class="fas fa-play me-2"></i>Date et heure de début *
+                                        </label>
+                                        {% if form.date_debut.errors %}
+                                            <div class="text-danger small mt-1">{{ form.date_debut.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        {{ form.date_fin }}
+                                        <label for="{{ form.date_fin.id_for_label }}">
+                                            <i class="fas fa-stop me-2"></i>Date et heure de fin *
+                                        </label>
+                                        {% if form.date_fin.errors %}
+                                            <div class="text-danger small mt-1">{{ form.date_fin.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3 p-3 bg-light rounded">
+                                        {{ form.jour_entier }}
+                                        <label class="form-check-label" for="{{ form.jour_entier.id_for_label }}">
+                                            <i class="fas fa-calendar-day me-2"></i>Jour entier
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        {{ form.lieu }}
+                                        <label for="{{ form.lieu.id_for_label }}">
+                                            <i class="fas fa-map-marker-alt me-2"></i>Lieu de l'événement
+                                        </label>
+                                        {% if form.lieu.errors %}
+                                            <div class="text-danger small mt-1">{{ form.lieu.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Section 3: Description -->
+                        <div class="form-section">
+                            <h6><i class="fas fa-align-left"></i>Description</h6>
+                            <div class="form-floating mb-3">
+                                {{ form.description }}
+                                <label for="{{ form.description.id_for_label }}">
+                                    <i class="fas fa-align-left me-2"></i>Description de l'événement
+                                </label>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Section 4: Participants -->
+                        <div class="form-section">
+                            <h6><i class="fas fa-users"></i>Participants</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.classes_concernees.id_for_label }}" class="form-label">
+                                            <i class="fas fa-users me-2"></i>Classes concernées
+                                        </label>
+                                        {{ form.classes_concernees }}
+                                        <div class="select-help">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs classes
+                                        </div>
+                                        {% if form.classes_concernees.errors %}
+                                            <div class="text-danger small mt-1">{{ form.classes_concernees.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.professeurs_concernees.id_for_label }}" class="form-label">
+                                            <i class="fas fa-chalkboard-teacher me-2"></i>Professeurs concernés
+                                        </label>
+                                        {{ form.professeurs_concernees }}
+                                        <div class="select-help">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs professeurs
+                                        </div>
+                                        {% if form.professeurs_concernees.errors %}
+                                            <div class="text-danger small mt-1">{{ form.professeurs_concernees.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Section 5: Options d'affichage -->
+                        <div class="form-section">
+                            <h6><i class="fas fa-palette"></i>Options d'affichage</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.couleur.id_for_label }}" class="form-label">
+                                            <i class="fas fa-palette me-2"></i>Couleur de l'événement
+                                        </label>
+                                        {{ form.couleur }}
+                                        <div class="color-picker" id="color-picker">
+                                            <div class="color-option" data-color="#667eea" style="background: #667eea;"></div>
+                                            <div class="color-option" data-color="#28a745" style="background: #28a745;"></div>
+                                            <div class="color-option" data-color="#dc3545" style="background: #dc3545;"></div>
+                                            <div class="color-option" data-color="#fd7e14" style="background: #fd7e14;"></div>
+                                            <div class="color-option" data-color="#6f42c1" style="background: #6f42c1;"></div>
+                                            <div class="color-option" data-color="#17a2b8" style="background: #17a2b8;"></div>
+                                            <div class="color-option" data-color="#6c757d" style="background: #6c757d;"></div>
+                                            <div class="color-option" data-color="#20c997" style="background: #20c997;"></div>
+                                        </div>
+                                        {% if form.couleur.errors %}
+                                            <div class="text-danger small mt-1">{{ form.couleur.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3 p-3 bg-light rounded">
+                                        {{ form.actif }}
+                                        <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                            <i class="fas fa-toggle-on me-2"></i>Événement actif
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between mt-4 pt-4 border-top">
+                            <a href="{% url 'school_management:evenement_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titreInput = document.getElementById('id_titre');
+    const typeSelect = document.getElementById('id_type_evenement');
+    const prioriteSelect = document.getElementById('id_priorite');
+    const dateDebutInput = document.getElementById('id_date_debut');
+    const dateFinInput = document.getElementById('id_date_fin');
+    const lieuInput = document.getElementById('id_lieu');
+    const couleurInput = document.getElementById('id_couleur');
+    const jourEntierCheckbox = document.getElementById('id_jour_entier');
+    
+    const previewTitre = document.getElementById('preview-titre');
+    const previewDate = document.getElementById('preview-date');
+    const previewType = document.getElementById('preview-type');
+    const previewPriority = document.getElementById('preview-priority');
+    const previewLieu = document.getElementById('preview-lieu').querySelector('span');
+    const eventPreview = document.getElementById('event-preview');
+    const formProgress = document.getElementById('form-progress');
+    const colorPicker = document.getElementById('color-picker');
+
+    // Fonction pour calculer le progrès du formulaire
+    function updateProgress() {
+        const requiredFields = [titreInput, typeSelect, dateDebutInput, dateFinInput];
+        const filledFields = requiredFields.filter(field => field.value.trim() !== '').length;
+        const progress = (filledFields / requiredFields.length) * 100;
+        formProgress.style.width = progress + '%';
+    }
+
+    // Fonction pour mettre à jour l'aperçu
+    function updatePreview() {
+        // Mettre à jour le titre
+        if (titreInput.value) {
+            previewTitre.textContent = titreInput.value;
+        } else {
+            previewTitre.textContent = 'Titre de l\'événement';
+        }
+        
+        // Mettre à jour le type
+        if (typeSelect.value) {
+            const types = {
+                'VACANCES': 'Vacances',
+                'JOUR_FERIE': 'Jour férié',
+                'EXAMEN': 'Examen',
+                'REUNION': 'Réunion',
+                'SORTIE': 'Sortie scolaire',
+                'EVENEMENT': 'Événement',
+                'FORMATION': 'Formation',
+                'AUTRE': 'Autre'
+            };
+            previewType.textContent = types[typeSelect.value] || typeSelect.value;
+        } else {
+            previewType.textContent = 'Type';
+        }
+        
+        // Mettre à jour la priorité
+        if (prioriteSelect.value) {
+            const priorities = {
+                'BASSE': 'Basse',
+                'NORMALE': 'Normale',
+                'HAUTE': 'Haute',
+                'URGENTE': 'Urgente'
+            };
+            previewPriority.textContent = priorities[prioriteSelect.value] || prioriteSelect.value;
+            previewPriority.className = `priority-badge priority-${prioriteSelect.value.toLowerCase()}`;
+        } else {
+            previewPriority.textContent = 'Priorité';
+            previewPriority.className = 'priority-badge';
+        }
+        
+        // Mettre à jour la date
+        if (dateDebutInput.value) {
+            const date = new Date(dateDebutInput.value);
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            
+            if (jourEntierCheckbox && jourEntierCheckbox.checked) {
+                previewDate.textContent = date.toLocaleDateString('fr-FR', options);
+            } else if (dateFinInput.value) {
+                const dateFin = new Date(dateFinInput.value);
+                if (date.toDateString() === dateFin.toDateString()) {
+                    // Même jour
+                    const heureDebut = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    const heureFin = dateFin.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    previewDate.textContent = `${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} • ${heureDebut} - ${heureFin}`;
+                } else {
+                    // Jours différents
+                    previewDate.textContent = `${date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${dateFin.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+                }
+            } else {
+                previewDate.textContent = date.toLocaleDateString('fr-FR', options);
+            }
+        } else {
+            previewDate.textContent = 'Date';
+        }
+        
+        // Mettre à jour le lieu
+        if (lieuInput && lieuInput.value) {
+            previewLieu.textContent = lieuInput.value;
+        } else {
+            previewLieu.textContent = 'Lieu';
+        }
+        
+        // Changer la couleur selon le type ou la couleur sélectionnée
+        const colors = {
+            'VACANCES': 'linear-gradient(135deg, #28a745, #20c997)',
+            'JOUR_FERIE': 'linear-gradient(135deg, #dc3545, #c82333)',
+            'EXAMEN': 'linear-gradient(135deg, #fd7e14, #e55a00)',
+            'REUNION': 'linear-gradient(135deg, #6f42c1, #5a32a3)',
+            'SORTIE': 'linear-gradient(135deg, #17a2b8, #138496)',
+            'EVENEMENT': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'FORMATION': 'linear-gradient(135deg, #20c997, #17a2b8)',
+            'AUTRE': 'linear-gradient(135deg, #6c757d, #5a6268)'
+        };
+        
+        if (couleurInput && couleurInput.value) {
+            eventPreview.style.background = couleurInput.value;
+        } else if (typeSelect.value && colors[typeSelect.value]) {
+            eventPreview.style.background = colors[typeSelect.value];
+        } else {
+            eventPreview.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+    }
+
+    // Gestion du sélecteur de couleur
+    if (colorPicker) {
+        const colorOptions = colorPicker.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Retirer la sélection précédente
+                colorOptions.forEach(opt => opt.classList.remove('selected'));
+                // Sélectionner la nouvelle couleur
+                this.classList.add('selected');
+                // Mettre à jour le champ couleur
+                if (couleurInput) {
+                    couleurInput.value = this.dataset.color;
+                    updatePreview();
+                }
+            });
+        });
+    }
+
+    // Gestion du checkbox "Jour entier"
+    if (jourEntierCheckbox) {
+        jourEntierCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Masquer les champs d'heure
+                dateDebutInput.type = 'date';
+                dateFinInput.type = 'date';
+            } else {
+                // Afficher les champs d'heure
+                dateDebutInput.type = 'datetime-local';
+                dateFinInput.type = 'datetime-local';
+            }
+            updatePreview();
+        });
+    }
+
+    // Événements pour mettre à jour l'aperçu et le progrès
+    [titreInput, typeSelect, prioriteSelect, dateDebutInput, dateFinInput, lieuInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                updatePreview();
+                updateProgress();
+            });
+            input.addEventListener('change', function() {
+                updatePreview();
+                updateProgress();
+            });
+        }
+    });
+
+    // Validation du formulaire
+    const form = document.getElementById('evenement-form');
+    form.addEventListener('submit', function(e) {
+        const dateDebut = dateDebutInput.value;
+        const dateFin = dateFinInput.value;
+        
+        if (dateDebut && dateFin) {
+            const debut = new Date(dateDebut);
+            const fin = new Date(dateFin);
+            
+            if (fin <= debut) {
+                e.preventDefault();
+                // Créer une notification élégante
+                showNotification('error', 'La date de fin doit être postérieure à la date de début.');
+                dateFinInput.focus();
+                return false;
+            }
+        }
+        
+        // Animation du bouton de soumission
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
+        submitBtn.disabled = true;
+    });
+
+    // Fonction pour afficher des notifications
+    function showNotification(type, message) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: none;
+            border-radius: 10px;
+        `;
+        
+        const icons = {
+            'success': 'fas fa-check-circle',
+            'error': 'fas fa-exclamation-circle',
+            'info': 'fas fa-info-circle',
+            'warning': 'fas fa-exclamation-triangle'
+        };
+        
+        notification.innerHTML = `
+            <i class="${icons[type] || icons['info']} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Animation d'entrée pour les sections
+    const sections = document.querySelectorAll('.form-section');
+    sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        section.style.transition = 'all 0.5s ease';
+        
+        setTimeout(() => {
+            section.style.opacity = '1';
+            section.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Mise à jour initiale
+    updatePreview();
+    updateProgress();
+    
+    // Pré-sélectionner la première couleur si aucune n'est sélectionnée
+    if (colorPicker && couleurInput && !couleurInput.value) {
+        const firstColor = colorPicker.querySelector('.color-option');
+        if (firstColor) {
+            firstColor.classList.add('selected');
+            couleurInput.value = firstColor.dataset.color;
+        }
+    }
+    
+    // Amélioration des champs de sélection multiple
+    const selectMultipleFields = document.querySelectorAll('.select-multiple');
+    selectMultipleFields.forEach(select => {
+        // Ajouter un indicateur de sélection
+        function updateSelectionCount() {
+            const selectedCount = select.selectedOptions.length;
+            const helpText = select.nextElementSibling;
+            if (helpText && helpText.classList.contains('select-help')) {
+                const baseText = helpText.innerHTML.split('<br>')[0];
+                if (selectedCount > 0) {
+                    helpText.innerHTML = baseText + '<br><strong class="text-success">' + selectedCount + ' élément(s) sélectionné(s)</strong>';
+                } else {
+                    helpText.innerHTML = baseText;
+                }
+            }
+        }
+        
+        // Mettre à jour le compteur lors de la sélection
+        select.addEventListener('change', updateSelectionCount);
+        
+        // Mettre à jour le compteur au chargement de la page
+        updateSelectionCount();
+        
+        // Améliorer l'accessibilité avec le clavier
+        select.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const focusedOption = select.options[select.selectedIndex];
+                if (focusedOption) {
+                    focusedOption.selected = !focusedOption.selected;
+                    updateSelectionCount();
+                }
+            }
+        });
+    });
+    
+    // Ajouter des raccourcis clavier pour la sélection
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+A pour sélectionner tout dans un champ select multiple
+        if (e.ctrlKey && e.key === 'a') {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.classList.contains('select-multiple')) {
+                e.preventDefault();
+                for (let option of activeElement.options) {
+                    option.selected = true;
+                }
+                const select = activeElement;
+                const helpText = select.nextElementSibling;
+                if (helpText && helpText.classList.contains('select-help')) {
+                    const baseText = helpText.innerHTML.split('<br>')[0];
+                    helpText.innerHTML = baseText + '<br><strong class="text-success">Tous les éléments sélectionnés</strong>';
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

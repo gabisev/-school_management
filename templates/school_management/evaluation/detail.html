@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}{{ evaluation.titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>{{ evaluation.titre }}
+                    </h4>
+                    <div>
+                        <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i>Retour
+                        </a>
+                        {% if not is_eleve %}
+                            <a href="{% url 'school_management:evaluation_update' evaluation.pk %}" class="btn btn-primary me-2">
+                                <i class="fas fa-edit me-1"></i>Modifier
+                            </a>
+                            <a href="{% url 'school_management:saisir_notes' evaluation.pk %}" class="btn btn-success">
+                                <i class="fas fa-edit me-1"></i>Saisir les notes
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Informations générales</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Titre :</td>
+                                    <td>{{ evaluation.titre }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Type :</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if evaluation.type_evaluation == 'DEVOIR' %}bg-primary
+                                            {% elif evaluation.type_evaluation == 'COMPOSITION' %}bg-danger
+                                            {% elif evaluation.type_evaluation == 'INTERROGATION' %}bg-warning text-dark
+                                            {% else %}bg-info{% endif %}">
+                                            {{ evaluation.get_type_evaluation_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Date :</td>
+                                    <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Note sur :</td>
+                                    <td>{{ evaluation.note_sur }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Coefficient :</td>
+                                    <td>{{ evaluation.coefficient }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Classe et Professeur</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Matière :</td>
+                                    <td>{{ evaluation.matiere.nom }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Classe :</td>
+                                    <td>
+                                        <a href="{% url 'school_management:classe_detail' evaluation.classe.pk %}" class="text-decoration-none">
+                                            {{ evaluation.classe.nom }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Professeur :</td>
+                                    <td>
+                                        <a href="{% url 'school_management:professeur_detail' evaluation.professeur.pk %}" class="text-decoration-none">
+                                            {{ evaluation.professeur.user.get_full_name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Nb d'élèves :</td>
+                                    <td>{{ evaluation.classe.eleves.count }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if evaluation.description %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="text-muted">Description</h6>
+                            <div class="p-3 bg-light rounded">
+                                {{ evaluation.description|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Statistiques des notes -->
+                    {% if evaluation.note_set.exists %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-muted">Statistiques des notes</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body text-center">
+                                            <h5>{{ evaluation.note_set.count }}</h5>
+                                            <small>Notes saisies</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h5>
+                                                {% with moyenne=evaluation.note_set.aggregate.note__avg %}
+                                                    {% if moyenne %}{{ moyenne|floatformat:2 }}{% else %}--{% endif %}
+                                                {% endwith %}
+                                            </h5>
+                                            <small>Moyenne</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h5>
+                                                {% with max_note=evaluation.note_set.aggregate.note__max %}
+                                                    {% if max_note %}{{ max_note }}{% else %}--{% endif %}
+                                                {% endwith %}
+                                            </h5>
+                                            <small>Note max</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-warning text-dark">
+                                        <div class="card-body text-center">
+                                            <h5>
+                                                {% with min_note=evaluation.note_set.aggregate.note__min %}
+                                                    {% if min_note %}{{ min_note }}{% else %}--{% endif %}
+                                                {% endwith %}
+                                            </h5>
+                                            <small>Note min</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des notes -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-muted">Notes des élèves</h6>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Élève</th>
+                                            <th>Note</th>
+                                            <th>Sur</th>
+                                            <th>Pourcentage</th>
+                                            <th>Appréciation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for note in evaluation.note_set.select_related.eleve.user %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{% url 'school_management:eleve_detail' note.eleve.pk %}" class="text-decoration-none">
+                                                        {{ note.eleve.user.get_full_name }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    {% widthratio note.note evaluation.note_sur 100 as pourcentage_note %}
+                                                    <strong class="
+                                                        {% if pourcentage_note >= 75 %}text-success
+                                                        {% elif pourcentage_note >= 50 %}text-warning
+                                                        {% else %}text-danger{% endif %}">
+                                                        {{ note.note }}
+                                                    </strong>
+                                                </td>
+                                                <td>{{ evaluation.note_sur }}</td>
+                                                <td>
+                                                    {% widthratio note.note evaluation.note_sur 100 as pourcentage %}
+                                                    {{ pourcentage }}%
+                                                </td>
+                                                <td>{{ note.appreciation|default:"-" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {% if is_eleve %}
+                                    Aucune note n'a encore été saisie pour cette évaluation.
+                                {% else %}
+                                    Aucune note n'a encore été saisie pour cette évaluation.
+                                    <br>
+                                    <a href="{% url 'school_management:saisir_notes' evaluation.pk %}" class="btn btn-success mt-2">
+                                        <i class="fas fa-plus me-1"></i>Saisir les notes
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

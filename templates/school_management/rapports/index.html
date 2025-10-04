@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapports et Statistiques{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Rapports et Statistiques
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Statistiques générales -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_eleves }}</h3>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user-graduate me-1"></i>
+                                        Élèves inscrits
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_professeurs }}</h3>
+                                    <p class="mb-0">
+                                        <i class="fas fa-chalkboard-teacher me-1"></i>
+                                        Professeurs
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_classes }}</h3>
+                                    <p class="mb-0">
+                                        <i class="fas fa-school me-1"></i>
+                                        Classes
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_evaluations }}</h3>
+                                    <p class="mb-0">
+                                        <i class="fas fa-clipboard-check me-1"></i>
+                                        Évaluations
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Types de rapports disponibles -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="mb-3">
+                                <i class="fas fa-file-alt me-2"></i>Types de rapports disponibles
+                            </h5>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Rapports par classe -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-school me-2"></i>Rapports par classe
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Consultez les statistiques détaillées par classe : moyennes, absences, évaluations.</p>
+                                    <div class="list-group">
+                                        {% for classe in classes %}
+                                            <a href="{% url 'school_management:rapport_classe' classe.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ classe.nom }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ classe.niveau }} - {{ classe.eleves.count }} élève(s)</small>
+                                                </div>
+                                                <span class="badge bg-primary rounded-pill">{{ classe.eleves.count }}</span>
+                                            </a>
+                                        {% empty %}
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Aucune classe disponible.
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bulletins individuels -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user-graduate me-2"></i>Bulletins individuels
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">
+                                        Générez des bulletins de notes individuels pour chaque élève.
+                                        <br><small class="text-muted">{{ eleves|length }} élève(s) disponible(s)</small>
+                                    </p>
+                                    
+                                    <!-- Sélecteur d'élève pour bulletins individuels -->
+                                    <div class="mb-3">
+                                        <label for="eleveSelect" class="form-label">
+                                            <i class="fas fa-user me-1"></i>Sélectionner un élève
+                                        </label>
+                                        <select id="eleveSelect" class="form-control" required>
+                                            <option value="">-- Choisir un élève --</option>
+                                            {% for eleve in eleves %}
+                                                <option value="{{ eleve.pk }}">
+                                                    {{ eleve.nom }} {{ eleve.prenom }} - {{ eleve.classe.nom }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-success" onclick="genererBulletin()">
+                                            <i class="fas fa-file-alt me-1"></i>Générer le bulletin
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulletinModal">
+                                            <i class="fas fa-download me-1"></i>Bulletins par classe
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Statistiques d'assiduité -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user-times me-2"></i>Statistiques d'assiduité
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Analysez les absences et retards par classe ou par élève.</p>
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <h4 class="text-danger">{{ total_absences }}</h4>
+                                            <small>Absences totales</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-warning">{{ absences_non_justifiees }}</h4>
+                                            <small>Non justifiées</small>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-warning" onclick="showAbsenceStats()">
+                                            <i class="fas fa-chart-pie me-1"></i>Voir les détails
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analyses des résultats -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>Analyses des résultats
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">Consultez les moyennes générales, les progressions et les classements.</p>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <h5 class="text-success">{{ moyenne_generale|floatformat:2|default:"--" }}</h5>
+                                            <small>Moyenne générale</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <h5 class="text-info">{{ meilleure_moyenne|floatformat:2|default:"--" }}</h5>
+                                            <small>Meilleure moyenne</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <h5 class="text-warning">{{ taux_reussite|floatformat:1|default:"--" }}%</h5>
+                                            <small>Taux de réussite</small>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-info" onclick="showResultsAnalysis()">
+                                            <i class="fas fa-analytics me-1"></i>Analyse détaillée
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rapports personnalisés -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-cogs me-2"></i>Rapports personnalisés
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="get" class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Classe</label>
+                                            <!-- Sélecteur de classe pour rapports personnalisés -->
+                                            <select name="classe" class="form-control">
+                                                <option value="">Toutes les classes</option>
+                                                {% for classe in classes %}
+                                                    <option value="{{ classe.pk }}">{{ classe.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Matière</label>
+                                            <select name="matiere" class="form-control">
+                                                <option value="">Toutes les matières</option>
+                                                {% for matiere in matieres %}
+                                                    <option value="{{ matiere.pk }}">{{ matiere.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Date début</label>
+                                            <input type="date" name="date_debut" class="form-control">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Date fin</label>
+                                            <input type="date" name="date_fin" class="form-control">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">&nbsp;</label>
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-secondary">
+                                                    <i class="fas fa-filter me-1"></i>Générer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour bulletins par classe -->
+<div class="modal fade" id="bulletinModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulletins par classe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Sélectionner une classe</label>
+                    <select id="classeSelectModal" class="form-control" required>
+                        <option value="">Choisir une classe</option>
+                        {% for classe in classes %}
+                            <option value="{{ classe.pk }}">
+                                {{ classe.nom }} ({{ classe.eleves.count }} élève(s))
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Format</label>
+                    <select id="formatSelect" class="form-control">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-success" onclick="genererBulletinsClasse()">
+                        <i class="fas fa-download me-1"></i>Télécharger
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAbsenceStats() {
+    window.location.href = "{% url 'school_management:absence_statistics' %}";
+}
+
+function showResultsAnalysis() {
+    window.location.href = "{% url 'school_management:results_analysis' %}";
+}
+
+function genererBulletin() {
+    const eleveId = document.getElementById('eleveSelect').value;
+    if (!eleveId) {
+        alert('Veuillez sélectionner un élève');
+        return;
+    }
+    // Rediriger vers la génération de bulletin
+    window.location.href = `/bulletins/generer/${eleveId}/`;
+}
+
+function genererBulletinsClasse() {
+    const classeId = document.getElementById('classeSelectModal').value;
+    const format = document.getElementById('formatSelect').value;
+    
+    if (!classeId) {
+        alert('Veuillez sélectionner une classe');
+        return;
+    }
+    
+    // Pour l'instant, rediriger vers le rapport de classe
+    window.location.href = `/rapports/classe/${classeId}/`;
+}
+
+// Définir la date par défaut (début d'année scolaire)
+document.addEventListener('DOMContentLoaded', function() {
+    const dateDebut = document.querySelector('input[name="date_debut"]');
+    const dateFin = document.querySelector('input[name="date_fin"]');
+    
+    if (dateDebut && !dateDebut.value) {
+        // Septembre de l'année en cours
+        const now = new Date();
+        const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+        dateDebut.value = `${year}-09-01`;
+    }
+    
+    if (dateFin && !dateFin.value) {
+        dateFin.value = new Date().toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

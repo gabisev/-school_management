@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notes de mes enfants{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-graduation-cap me-2"></i>
+            Notes de mes enfants
+        </h1>
+        <div>
+            <a href="{% url 'school_management:parent_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filtres
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="eleve" class="form-label">Enfant</label>
+                    <select name="eleve" id="eleve" class="form-select">
+                        <option value="">Tous les enfants</option>
+                        {% for enfant in enfants %}
+                            <option value="{{ enfant.id }}" {% if selected_eleve == enfant.id|stringformat:"s" %}selected{% endif %}>
+                                {{ enfant.user.get_full_name|default:enfant.user.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="matiere" class="form-label">Matière</label>
+                    <select name="matiere" id="matiere" class="form-select">
+                        <option value="">Toutes les matières</option>
+                        {% for matiere in matieres %}
+                            <option value="{{ matiere.id }}" {% if selected_matiere == matiere.id|stringformat:"s" %}selected{% endif %}>
+                                {{ matiere.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i> Filtrer
+                    </button>
+                    <a href="{% url 'school_management:parent_notes' %}" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt me-1"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des notes -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Liste des Notes
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if notes %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Enfant</th>
+                                <th>Matière</th>
+                                <th>Évaluation</th>
+                                <th>Note</th>
+                                <th>Date</th>
+                                <th>Commentaire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in notes %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if note.eleve.photo %}
+                                                <img src="{{ note.eleve.photo.url }}" class="rounded-circle me-2" width="30" height="30" alt="{{ note.eleve.user.get_full_name }}">
+                                            {% else %}
+                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                                    <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ note.eleve.user.get_full_name|default:note.eleve.user.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ note.eleve.classe.nom }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ note.evaluation.matiere.nom }}</strong>
+                                        <br>
+                                        <small class="text-muted">Coeff. {{ note.evaluation.matiere.coefficient }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ note.evaluation.get_type_evaluation_display }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ note.evaluation.titre }}</small>
+                                    </td>
+                                    <td>
+                                        {% if note.note %}
+                                            <span class="badge bg-{% if note.note >= 16 %}success{% elif note.note >= 14 %}success{% elif note.note >= 12 %}success{% elif note.note >= 10 %}warning{% else %}danger{% endif %} fs-6">
+                                                {{ note.note }}/20
+                                            </span>
+                                        {% elif note.absent %}
+                                            <span class="badge bg-secondary">Absent</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">Non noté</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ note.date_saisie|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if note.commentaire %}
+                                            <span class="text-muted" title="{{ note.commentaire }}">
+                                                {{ note.commentaire|truncatechars:30 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_matiere %}&matiere={{ selected_matiere }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i> Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for i in page_obj.paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ i }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_matiere %}&matiere={{ selected_matiere }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_matiere %}&matiere={{ selected_matiere }}{% endif %}">
+                                        Suivant <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-graduation-cap fa-4x mb-3"></i>
+                    <h4>Aucune note trouvée</h4>
+                    <p>Il n'y a pas de notes correspondant à vos critères de recherche.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

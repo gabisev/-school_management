@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-users-cog text-primary me-2"></i>
+                        Gestion des Utilisateurs
+                    </h2>
+                    <p class="text-muted mb-0">Administration des comptes utilisateurs du système</p>
+                </div>
+                <a href="{% url 'school_management:admin_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+
+            <!-- Alertes et statut -->
+            <div class="row mb-4">
+                {% if eleves_sans_user > 0 %}
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ eleves_sans_user }}</strong> élève(s) sans compte utilisateur
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if professeurs_sans_user > 0 %}
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ professeurs_sans_user }}</strong> professeur(s) sans compte utilisateur
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if parents_sans_user > 0 %}
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ parents_sans_user }}</strong> parent(s) sans compte utilisateur
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Statistiques des utilisateurs -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ total_users }}</h4>
+                                    <p class="mb-0">Total Utilisateurs</p>
+                                </div>
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ recent_users|length }}</h4>
+                                    <p class="mb-0">Nouveaux ce mois</p>
+                                </div>
+                                <i class="fas fa-user-plus fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ eleves_sans_user }}</h4>
+                                    <p class="mb-0">Élèves sans compte</p>
+                                </div>
+                                <i class="fas fa-user-graduate fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ professeurs_sans_user }}</h4>
+                                    <p class="mb-0">Professeurs sans compte</p>
+                                </div>
+                                <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utilisateurs récents -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-clock me-2"></i>
+                        Utilisateurs Récents
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom d'utilisateur</th>
+                                        <th>Nom complet</th>
+                                        <th>Email</th>
+                                        <th>Type</th>
+                                        <th>Date d'inscription</th>
+                                        <th>Dernière connexion</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                        <tr>
+                                            <td class="fw-bold">{{ user.username }}</td>
+                                            <td>{{ user.get_full_name|default:"--" }}</td>
+                                            <td>{{ user.email|default:"--" }}</td>
+                                            <td>
+                                                {% if user.is_superuser %}
+                                                    <span class="badge bg-danger">Super Admin</span>
+                                                {% elif user.is_staff %}
+                                                    <span class="badge bg-warning">Staff</span>
+                                                {% elif user.eleve %}
+                                                    <span class="badge bg-primary">Élève</span>
+                                                {% elif user.professeur %}
+                                                    <span class="badge bg-success">Professeur</span>
+                                                {% elif user.parent %}
+                                                    <span class="badge bg-info">Parent</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Utilisateur</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                {% if user.last_login %}
+                                                    {{ user.last_login|date:"d/m/Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">Jamais connecté</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">Actif</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactif</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'school_management:admin_user_details' user.id %}" 
+                                                       class="btn btn-outline-primary" title="Voir les détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:admin_reset_user_password' user.id %}" 
+                                                       class="btn btn-outline-warning" title="Réinitialiser le mot de passe">
+                                                        <i class="fas fa-key"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun utilisateur récent trouvé.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Professeurs -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                        Professeurs ({{ professeur_users|length }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if professeur_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom d'utilisateur</th>
+                                        <th>Nom complet</th>
+                                        <th>Email</th>
+                                        <th>Date d'inscription</th>
+                                        <th>Dernière connexion</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in professeur_users %}
+                                        <tr>
+                                            <td class="fw-bold">{{ user.username }}</td>
+                                            <td>{{ user.get_full_name|default:"--" }}</td>
+                                            <td>{{ user.email|default:"--" }}</td>
+                                            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                                            <td>
+                                                {% if user.last_login %}
+                                                    {{ user.last_login|date:"d/m/Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">Jamais connecté</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">Actif</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactif</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'school_management:admin_user_details' user.id %}" 
+                                                       class="btn btn-outline-primary" title="Voir les détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:admin_reset_user_password' user.id %}" 
+                                                       class="btn btn-outline-warning" title="Réinitialiser le mot de passe">
+                                                        <i class="fas fa-key"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun professeur trouvé.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions d'administration -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-tools me-2"></i>
+                        Actions d'Administration
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-graduate fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Gérer les Élèves</h5>
+                                    <p class="card-text">Créer et gérer les comptes des élèves</p>
+                                    <a href="{% url 'school_management:eleve_list' %}" class="btn btn-primary">
+                                        <i class="fas fa-arrow-right me-2"></i>
+                                        Aller aux élèves
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chalkboard-teacher fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">Gérer les Professeurs</h5>
+                                    <p class="card-text">Créer et gérer les comptes des professeurs</p>
+                                    <a href="{% url 'school_management:professeur_list' %}" class="btn btn-success">
+                                        <i class="fas fa-arrow-right me-2"></i>
+                                        Aller aux professeurs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-3x text-info mb-3"></i>
+                                    <h5 class="card-title">Gérer les Parents</h5>
+                                    <p class="card-text">Créer et gérer les comptes des parents</p>
+                                    <a href="{% url 'school_management:parent_list' %}" class="btn btn-info">
+                                        <i class="fas fa-arrow-right me-2"></i>
+                                        Aller aux parents
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-sync-alt fa-3x text-warning mb-3"></i>
+                                    <h5 class="card-title">Synchroniser les Comptes</h5>
+                                    <p class="card-text">Créer automatiquement les comptes manquants</p>
+                                    <button class="btn btn-warning" onclick="syncAccounts()">
+                                        <i class="fas fa-magic me-2"></i>
+                                        Synchroniser
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-download fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Exporter les Données</h5>
+                                    <p class="card-text">Télécharger les données utilisateurs</p>
+                                    <button class="btn btn-secondary" onclick="exportData()">
+                                        <i class="fas fa-file-excel me-2"></i>
+                                        Exporter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function syncAccounts() {
+    window.location.href = "{% url 'school_management:sync_user_accounts' %}";
+}
+
+function exportData() {
+    window.location.href = "{% url 'school_management:export_user_data' %}";
+}
+</script>
+{% endblock %}
+
+

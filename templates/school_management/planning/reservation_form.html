@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier{% else %}Créer{% endif %} Réservation
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .reservation-preview {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .datetime-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .details-section {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} Réservation
+                    </h2>
+                    <p class="text-muted">
+                        {% if object %}
+                            Modifiez les informations de cette réservation
+                        {% else %}
+                            Créez une nouvelle réservation de salle
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:reservation_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Aperçu de la réservation -->
+            <div class="reservation-preview" id="reservation-preview">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span id="preview-titre">Titre de la réservation</span>
+                </h5>
+                <div class="h6 mt-2">
+                    <span id="preview-salle">Salle</span> • 
+                    <span id="preview-date">Date</span>
+                </div>
+                <div class="small">
+                    <span id="preview-duree">Durée</span> • 
+                    <span id="preview-personnes">--</span> personnes
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card form-card">
+                <div class="card-header form-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        Informations de la réservation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="reservation-form">
+                        {% csrf_token %}
+                        
+                        <!-- Section 1: Informations de base -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.salle.id_for_label }}" class="form-label">
+                                        <i class="fas fa-door-open me-2"></i>Salle *
+                                    </label>
+                                    {{ form.salle }}
+                                    {% if form.salle.errors %}
+                                        <div class="text-danger small">{{ form.salle.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.titre.id_for_label }}" class="form-label">
+                                        <i class="fas fa-heading me-2"></i>Titre de la réservation *
+                                    </label>
+                                    {{ form.titre }}
+                                    {% if form.titre.errors %}
+                                        <div class="text-danger small">{{ form.titre.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-2"></i>Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Section 2: Dates et heures -->
+                        <div class="datetime-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-clock me-2"></i>Dates et Heures
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.date_debut.id_for_label }}" class="form-label">
+                                            <i class="fas fa-play me-2"></i>Date et heure de début *
+                                        </label>
+                                        {{ form.date_debut }}
+                                        {% if form.date_debut.errors %}
+                                            <div class="text-danger small">{{ form.date_debut.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.date_fin.id_for_label }}" class="form-label">
+                                            <i class="fas fa-stop me-2"></i>Date et heure de fin *
+                                        </label>
+                                        {{ form.date_fin }}
+                                        {% if form.date_fin.errors %}
+                                            <div class="text-danger small">{{ form.date_fin.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Détails de la réservation -->
+                        <div class="details-section">
+                            <h6 class="text-warning mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Détails de la réservation
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.motif.id_for_label }}" class="form-label">
+                                            <i class="fas fa-tag me-2"></i>Motif de la réservation
+                                        </label>
+                                        {{ form.motif }}
+                                        {% if form.motif.errors %}
+                                            <div class="text-danger small">{{ form.motif.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.nombre_personnes.id_for_label }}" class="form-label">
+                                            <i class="fas fa-users me-2"></i>Nombre de personnes *
+                                        </label>
+                                        {{ form.nombre_personnes }}
+                                        {% if form.nombre_personnes.errors %}
+                                            <div class="text-danger small">{{ form.nombre_personnes.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.equipements_demandes.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tools me-2"></i>Équipements demandés
+                                </label>
+                                {{ form.equipements_demandes }}
+                                <div class="form-text">Précisez les équipements nécessaires pour votre réservation</div>
+                                {% if form.equipements_demandes.errors %}
+                                    <div class="text-danger small">{{ form.equipements_demandes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:reservation_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const salleSelect = document.getElementById('id_salle');
+    const titreInput = document.getElementById('id_titre');
+    const dateDebutInput = document.getElementById('id_date_debut');
+    const dateFinInput = document.getElementById('id_date_fin');
+    const nombrePersonnesInput = document.getElementById('id_nombre_personnes');
+    
+    const previewTitre = document.getElementById('preview-titre');
+    const previewSalle = document.getElementById('preview-salle');
+    const previewDate = document.getElementById('preview-date');
+    const previewDuree = document.getElementById('preview-duree');
+    const previewPersonnes = document.getElementById('preview-personnes');
+    const reservationPreview = document.getElementById('reservation-preview');
+
+    // Fonction pour mettre à jour l'aperçu
+    function updatePreview() {
+        // Mettre à jour le titre
+        if (titreInput.value) {
+            previewTitre.textContent = titreInput.value;
+        } else {
+            previewTitre.textContent = 'Titre de la réservation';
+        }
+        
+        // Mettre à jour la salle
+        if (salleSelect.value) {
+            const salleText = salleSelect.options[salleSelect.selectedIndex].text;
+            previewSalle.textContent = salleText;
+        } else {
+            previewSalle.textContent = 'Salle';
+        }
+        
+        // Mettre à jour la date
+        if (dateDebutInput.value) {
+            const dateDebut = new Date(dateDebutInput.value);
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            previewDate.textContent = dateDebut.toLocaleDateString('fr-FR', options);
+        } else {
+            previewDate.textContent = 'Date';
+        }
+        
+        // Mettre à jour la durée
+        if (dateDebutInput.value && dateFinInput.value) {
+            const debut = new Date(dateDebutInput.value);
+            const fin = new Date(dateFinInput.value);
+            const dureeMs = fin - debut;
+            const dureeHeures = Math.floor(dureeMs / (1000 * 60 * 60));
+            const dureeMinutes = Math.floor((dureeMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (dureeHeures > 0) {
+                previewDuree.textContent = `${dureeHeures}h${dureeMinutes > 0 ? dureeMinutes : ''}`;
+            } else {
+                previewDuree.textContent = `${dureeMinutes}min`;
+            }
+        } else {
+            previewDuree.textContent = 'Durée';
+        }
+        
+        // Mettre à jour le nombre de personnes
+        if (nombrePersonnesInput.value) {
+            previewPersonnes.textContent = nombrePersonnesInput.value;
+        } else {
+            previewPersonnes.textContent = '--';
+        }
+    }
+
+    // Événements pour mettre à jour l'aperçu
+    salleSelect.addEventListener('change', updatePreview);
+    titreInput.addEventListener('input', updatePreview);
+    dateDebutInput.addEventListener('change', updatePreview);
+    dateFinInput.addEventListener('change', updatePreview);
+    nombrePersonnesInput.addEventListener('input', updatePreview);
+
+    // Validation du formulaire
+    const form = document.getElementById('reservation-form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = ['id_salle', 'id_titre', 'id_date_debut', 'id_date_fin', 'id_nombre_personnes'];
+        let hasErrors = false;
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validation des dates
+        if (dateDebutInput.value && dateFinInput.value) {
+            const debut = new Date(dateDebutInput.value);
+            const fin = new Date(dateFinInput.value);
+            
+            if (fin <= debut) {
+                dateFinInput.classList.add('is-invalid');
+                hasErrors = true;
+                alert('La date de fin doit être postérieure à la date de début.');
+            } else {
+                dateFinInput.classList.remove('is-invalid');
+            }
+        }
+
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires et vérifier les dates.');
+        }
+    });
+
+    // Mise à jour initiale
+    updatePreview();
+});
+</script>
+{% endblock %}
+
+
+

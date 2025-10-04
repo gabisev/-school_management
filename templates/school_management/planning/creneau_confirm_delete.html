@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer le Créneau{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .warning-section {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 5px solid #ffc107;
+    }
+    .creneau-preview {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-trash me-2"></i>Supprimer le Créneau</h2>
+                    <p class="text-muted">Confirmez la suppression de ce créneau horaire</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:creneau_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Avertissement -->
+            <div class="warning-section">
+                <h5 class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Attention : Action irréversible
+                </h5>
+                <p class="mb-0">
+                    Vous êtes sur le point de supprimer définitivement ce créneau horaire. 
+                    Cette action ne peut pas être annulée et affectera tous les emplois du temps utilisant ce créneau.
+                </p>
+            </div>
+
+            <!-- Aperçu du créneau -->
+            <div class="creneau-preview">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    {{ object.get_jour_display }}
+                </h5>
+                <div class="h3 mt-2">
+                    {{ object.heure_debut|time:"H:i" }} - {{ object.heure_fin|time:"H:i" }}
+                </div>
+                <div class="small">
+                    Durée: {{ object.duree_minutes }} minutes
+                    {% if object.pause %}
+                        <span class="badge bg-warning ms-2">
+                            <i class="fas fa-utensils me-1"></i>Pause
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informations du créneau -->
+            <div class="card delete-card">
+                <div class="card-header delete-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Créneau à supprimer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Jour</label>
+                                <div class="alert alert-info">{{ object.get_jour_display }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Heure de début</label>
+                                <div class="alert alert-success">{{ object.heure_debut|time:"H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Heure de fin</label>
+                                <div class="alert alert-warning">{{ object.heure_fin|time:"H:i" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Durée</label>
+                                <div class="alert alert-primary">{{ object.duree_minutes }} minutes</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type de créneau</label>
+                                <div>
+                                    {% if object.pause %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-utensils me-1"></i>Créneau de pause
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-chalkboard me-1"></i>Créneau de cours
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de confirmation -->
+            <div class="card delete-card mt-4">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <h5 class="text-danger mb-3">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Êtes-vous sûr de vouloir supprimer ce créneau ?
+                            </h5>
+                            <p class="text-muted mb-4">
+                                Cette action supprimera définitivement le créneau et affectera tous les emplois du temps associés.
+                            </p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'school_management:creneau_list' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-danger btn-lg" id="confirm-delete">
+                                    <i class="fas fa-trash me-2"></i>Oui, supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="card delete-card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations sur la suppression
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ce qui sera supprimé :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-danger me-2"></i>Le créneau horaire</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les informations de planning</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Impact sur les emplois du temps :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Les emplois du temps utilisant ce créneau devront être modifiés</li>
+                                <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Des conflits peuvent apparaître</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    
+    // Confirmation supplémentaire
+    confirmDeleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Êtes-vous ABSOLUMENT sûr de vouloir supprimer ce créneau ?\n\nCette action est irréversible et affectera tous les emplois du temps utilisant ce créneau !')) {
+            // Afficher un loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+            this.disabled = true;
+            
+            // Soumettre le formulaire
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

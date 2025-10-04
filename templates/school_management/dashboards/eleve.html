@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Espace Élève{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête personnalisé -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            {% if eleve.photo %}
+                                <img src="{{ eleve.photo.url }}" alt="Photo" class="rounded-circle img-fluid border border-white" style="max-width: 100px;">
+                            {% else %}
+                                <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 2rem;">
+                                    {{ eleve.user.first_name.0 }}{{ eleve.user.last_name.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h2 class="mb-1">Bienvenue, {{ eleve.user.first_name }} !</h2>
+                            <p class="mb-1">
+                                <i class="fas fa-id-card me-2"></i>{{ eleve.numero_etudiant }} • 
+                                <i class="fas fa-school me-2"></i>{{ eleve.classe.nom }} • 
+                                <i class="fas fa-calendar me-2"></i>Année {{ eleve.classe.annee_scolaire|default:"2024-2025" }}
+                            </p>
+                            <small>Dernière connexion : {{ request.user.last_login|date:"d/m/Y à H:i"|default:"Première connexion" }}</small>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-cog me-1"></i>Mon compte
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="showProfile()"><i class="fas fa-user me-2"></i>Mon profil</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changePassword()"><i class="fas fa-key me-2"></i>Changer mot de passe</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'school_management:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h3>{{ moyenne_generale|floatformat:2|default:"--" }}/20</h3>
+                    <p class="mb-0">Moyenne générale</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                    <h3>{{ notes|length }}</h3>
+                    <p class="mb-0">Notes récentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-times fa-2x mb-2"></i>
+                    <h3>{{ total_absences }}</h3>
+                    <p class="mb-0">Absences totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h3>{{ absences_non_justifiees }}</h3>
+                    <p class="mb-0">Non justifiées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nouvelle ligne pour la messagerie -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-2x mb-2"></i>
+                    <h3>{{ conversations_count|default:0 }}</h3>
+                    <p class="mb-0">Conversations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope-open fa-2x mb-2"></i>
+                    <h3>{{ unread_messages_count|default:0 }}</h3>
+                    <p class="mb-0">Messages non lus</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-comments fa-2x mb-2"></i>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{% url 'school_management:messaging_dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-comments me-1"></i>Mes conversations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mes dernières notes -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Mes dernières notes
+                    </h5>
+                    <a href="{% url 'school_management:notes_eleve' eleve.pk %}" class="btn btn-sm btn-primary">
+                        Voir toutes mes notes
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if notes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Matière</th>
+                                        <th>Évaluation</th>
+                                        <th>Date</th>
+                                        <th>Note</th>
+                                        <th>Appréciation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for note in notes %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ note.evaluation.matiere.nom }}</span>
+                                            </td>
+                                            <td>{{ note.evaluation.titre }}</td>
+                                            <td>{{ note.evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <strong class="
+                                                    {% widthratio note.note note.evaluation.note_sur 100 as pourcentage %}
+                                                    {% if pourcentage >= 75 %}text-success
+                                                    {% elif pourcentage >= 50 %}text-warning
+                                                    {% else %}text-danger{% endif %}">
+                                                    {{ note.note }}/{{ note.evaluation.note_sur }}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                {% if note.appreciation %}
+                                                    <small>{{ note.appreciation|truncatechars:30 }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <p>Aucune note disponible pour le moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Évaluations à venir & Absences -->
+        <div class="col-md-4">
+            <!-- Évaluations à venir -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar-check me-2"></i>Évaluations à venir
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if evaluations_a_venir %}
+                        {% for evaluation in evaluations_a_venir %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                <div>
+                                    <strong>{{ evaluation.matiere.nom }}</strong><br>
+                                    <small>{{ evaluation.titre }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-primary">{{ evaluation.date_evaluation|date:"d/m" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                            <p class="mb-0">Aucune évaluation programmée</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mes dernières absences -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user-times me-2"></i>Mes dernières absences
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if absences %}
+                        {% for absence in absences %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded
+                                {% if not absence.justifiee %}bg-warning bg-opacity-25{% else %}bg-light{% endif %}">
+                                <div>
+                                    <strong>{{ absence.date_debut|date:"d/m/Y" }}</strong><br>
+                                    <small>{{ absence.get_motif_display }}</small>
+                                </div>
+                                <div class="text-end">
+                                    {% if absence.justifiee %}
+                                        <span class="badge bg-success">Justifiée</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Non justifiée</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                            <p class="mb-0">Aucune absence récente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:notes_eleve' eleve.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-chart-bar me-2"></i>Mes notes
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button onclick="genererBulletin({{ eleve.pk }})" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-file-alt me-2"></i>Mon bulletin
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:classe_detail' eleve.classe.pk %}" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-users me-2"></i>Ma classe
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:emploi_eleve' %}" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-calendar me-2"></i>Emploi du temps
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:messaging_dashboard' %}" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-comments me-2"></i>Mes conversations
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:mes_bulletins' %}" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-file-alt me-2"></i>Mes bulletins
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-outline-dark w-100 mb-2">
+                                <i class="fas fa-clipboard-list me-2"></i>Évaluations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showProfile() {
+    window.location.href = "{% url 'school_management:user_profile' %}";
+}
+
+function changePassword() {
+    window.location.href = "{% url 'school_management:change_password' %}";
+}
+
+function genererBulletin(eleveId) {
+    window.location.href = `/bulletins/generer/${eleveId}/`;
+}
+
+</script>
+{% endblock %}

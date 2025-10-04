@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ parent.get_nom_complet }}{% endblock %}
+
+{% block page_title %}Supprimer {{ parent.get_nom_complet }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'school_management:parent_detail' parent.pk %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Retour aux détails
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmation de suppression
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-warning me-2"></i>Attention !
+                    </h5>
+                    <p class="mb-0">
+                        Vous êtes sur le point de supprimer définitivement le parent 
+                        <strong>{{ parent.get_nom_complet }}</strong>.
+                    </p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        {% if parent.photo %}
+                            <img src="{{ parent.photo.url }}" alt="{{ parent.get_nom_complet }}" 
+                                 class="rounded-circle mb-3" width="100" height="100">
+                        {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <h5>{{ parent.get_nom_complet }}</h5>
+                        <p class="text-muted mb-2">
+                            <span class="badge 
+                                {% if parent.relation == 'PERE' %}bg-primary
+                                {% elif parent.relation == 'MERE' %}bg-pink
+                                {% elif parent.relation == 'TUTEUR' %}bg-warning text-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ parent.get_relation_display }}
+                            </span>
+                        </p>
+                        {% if parent.profession %}
+                            <p><strong>Profession :</strong> {{ parent.profession }}</p>
+                        {% endif %}
+                        {% if parent.telephone %}
+                            <p><strong>Téléphone :</strong> {{ parent.telephone }}</p>
+                        {% endif %}
+                        {% if parent.email %}
+                            <p><strong>Email :</strong> {{ parent.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-info-circle me-2"></i>Conséquences de la suppression :</h6>
+                    <ul class="mb-0">
+                        <li>Le parent sera supprimé définitivement</li>
+                        <li>Son compte utilisateur sera également supprimé</li>
+                        <li>Les relations avec les élèves seront supprimées</li>
+                        <li>Cette action est irréversible</li>
+                    </ul>
+                </div>
+                
+                {% if parent.get_enfants.count > 0 %}
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-child me-2"></i>Enfants concernés ({{ parent.get_enfants.count }}) :</h6>
+                        <ul class="mb-0">
+                            {% for enfant in parent.get_enfants.all %}
+                                <li>{{ enfant.nom_complet }} ({{ enfant.classe.nom }})</li>
+                            {% endfor %}
+                        </ul>
+                        <p class="mt-2 mb-0">
+                            <small class="text-muted">
+                                Les relations parent-enfant seront supprimées, mais les élèves ne seront pas affectés.
+                            </small>
+                        </p>
+                    </div>
+                {% endif %}
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'school_management:parent_detail' parent.pk %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

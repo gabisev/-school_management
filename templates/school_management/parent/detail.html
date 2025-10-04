@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ parent.get_nom_complet }} - Détails du parent{% endblock %}
+
+{% block page_title %}{{ parent.get_nom_complet }}{% endblock %}
+
+{% block page_actions %}
+{% if is_admin %}
+    <a href="{% url 'school_management:parent_update' parent.pk %}" class="btn btn-primary">
+        <i class="fas fa-edit me-1"></i>Modifier
+    </a>
+    <a href="{% url 'school_management:parent_delete' parent.pk %}" class="btn btn-danger">
+        <i class="fas fa-trash me-1"></i>Supprimer
+    </a>
+{% elif is_parent and parent.user == user %}
+    <a href="{% url 'school_management:parent_update' parent.pk %}" class="btn btn-primary">
+        <i class="fas fa-edit me-1"></i>Modifier mes informations
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations personnelles -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-user me-2"></i>Informations personnelles
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                {% if parent.photo %}
+                    <img src="{{ parent.photo.url }}" alt="{{ parent.get_nom_complet }}" 
+                         class="rounded-circle mb-3" width="120" height="120">
+                {% else %}
+                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
+                         style="width: 120px; height: 120px;">
+                        <i class="fas fa-user fa-3x text-white"></i>
+                    </div>
+                {% endif %}
+                
+                <h5 class="mb-1">{{ parent.get_nom_complet }}</h5>
+                <p class="text-muted mb-3">
+                    <span class="badge 
+                        {% if parent.relation == 'PERE' %}bg-primary
+                        {% elif parent.relation == 'MERE' %}bg-pink
+                        {% elif parent.relation == 'TUTEUR' %}bg-warning text-dark
+                        {% else %}bg-secondary{% endif %}">
+                        {{ parent.get_relation_display }}
+                    </span>
+                </p>
+                
+                <div class="text-start">
+                    <p><strong>Sexe :</strong> {{ parent.get_sexe_display }}</p>
+                    {% if parent.date_naissance %}
+                        <p><strong>Date de naissance :</strong> {{ parent.date_naissance|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    {% if parent.lieu_naissance %}
+                        <p><strong>Lieu de naissance :</strong> {{ parent.lieu_naissance }}</p>
+                    {% endif %}
+                    <p><strong>Nationalité :</strong> {{ parent.nationalite }}</p>
+                    {% if parent.profession %}
+                        <p><strong>Profession :</strong> {{ parent.profession }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations de contact -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-address-book me-2"></i>Informations de contact
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if parent.telephone %}
+                    <div class="mb-3">
+                        <i class="fas fa-phone text-primary me-2"></i>
+                        <strong>Téléphone :</strong>
+                        <a href="tel:{{ parent.telephone }}" class="text-decoration-none ms-2">
+                            {{ parent.telephone }}
+                        </a>
+                    </div>
+                {% endif %}
+                
+                {% if parent.email %}
+                    <div class="mb-3">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        <strong>Email :</strong>
+                        <a href="mailto:{{ parent.email }}" class="text-decoration-none ms-2">
+                            {{ parent.email }}
+                        </a>
+                    </div>
+                {% endif %}
+                
+                {% if parent.adresse %}
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                        <strong>Adresse :</strong>
+                        <div class="mt-1">{{ parent.adresse|linebreaks }}</div>
+                    </div>
+                {% endif %}
+                
+                {% if parent.user %}
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle text-primary me-2"></i>
+                        <strong>Nom d'utilisateur :</strong>
+                        <span class="ms-2">{{ parent.user.username }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enfants -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-child me-2"></i>Enfants ({{ enfants.count }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if enfants %}
+                    {% for enfant in enfants %}
+                        <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                            <div class="me-3">
+                                {% if enfant.photo %}
+                                    <img src="{{ enfant.photo.url }}" alt="{{ enfant.nom_complet }}" 
+                                         class="rounded-circle" width="40" height="40">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user-graduate text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <a href="{% url 'school_management:eleve_detail' enfant.pk %}" class="text-decoration-none fw-bold">
+                                    {{ enfant.nom_complet }}
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    {{ enfant.classe.nom }} - {{ enfant.numero_etudiant }}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-child fa-2x mb-2"></i>
+                        <p>Aucun enfant enregistré</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Informations système -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations système
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Date de création :</strong> {{ parent.date_creation|date:"d/m/Y à H:i" }}</p>
+                        <p><strong>Dernière modification :</strong> {{ parent.date_modification|date:"d/m/Y à H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Statut :</strong> 
+                            {% if parent.actif %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactif</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Bulletins{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Gestion des Bulletins
+                    </h2>
+                    <p class="text-muted mb-0">Gérez les bulletins de vos classes en tant que professeur principal</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Seul le professeur principal peut modifier les bulletins
+                    </small>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Classe</label>
+                            <select class="form-select" id="filterClasse">
+                                <option value="">Toutes les classes</option>
+                                {% for classe in classes_principales %}
+                                    <option value="{{ classe.nom }}">{{ classe.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Trimestre</label>
+                            <select class="form-select" id="filterTrimestre">
+                                <option value="">Tous les trimestres</option>
+                                <option value="1">Trimestre 1</option>
+                                <option value="2">Trimestre 2</option>
+                                <option value="3">Trimestre 3</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Statut</label>
+                            <select class="form-select" id="filterStatut">
+                                <option value="">Tous les statuts</option>
+                                <option value="BROUILLON">Brouillon</option>
+                                <option value="EN_ATTENTE">En attente</option>
+                                <option value="VALIDE">Validé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button class="btn btn-primary" onclick="applyFilters()">
+                                    <i class="fas fa-filter me-2"></i>
+                                    Filtrer
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                    <i class="fas fa-times me-2"></i>
+                                    Effacer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if bulletins %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0">Élève</th>
+                                        <th class="border-0">Classe</th>
+                                        <th class="border-0 text-center">Trimestre</th>
+                                        <th class="border-0 text-center">Moyenne</th>
+                                        <th class="border-0 text-center">Rang</th>
+                                        <th class="border-0 text-center">Statut</th>
+                                        <th class="border-0 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bulletin in bulletins %}
+                                        <tr data-classe="{{ bulletin.classe.nom }}" 
+                                            data-trimestre="{{ bulletin.trimestre }}" 
+                                            data-statut="{{ bulletin.statut }}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                                        {{ bulletin.eleve.user.first_name|first|upper }}{{ bulletin.eleve.user.last_name|first|upper }}
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ bulletin.eleve.nom_complet }}</h6>
+                                                        <small class="text-muted">{{ bulletin.eleve.user.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ bulletin.classe.nom }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ bulletin.trimestre }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                {% if bulletin.moyenne_generale %}
+                                                    <span class="badge bg-{% if bulletin.moyenne_generale >= 12 %}success{% elif bulletin.moyenne_generale >= 10 %}warning{% else %}danger{% endif %} fs-6">
+                                                        {{ bulletin.moyenne_generale }}/20
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">--</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if bulletin.rang %}
+                                                    <span class="badge bg-primary">{{ bulletin.rang }}/{{ bulletin.effectif_classe }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">--</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-{% if bulletin.statut == 'VALIDE' %}success{% elif bulletin.statut == 'EN_ATTENTE' %}warning{% else %}secondary{% endif %}">
+                                                    {{ bulletin.get_statut_display }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'school_management:bulletin_prof_detail' bulletin.pk %}" 
+                                                       class="btn btn-sm btn-outline-primary" title="Voir le détail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:bulletin_update' bulletin.pk %}" 
+                                                       class="btn btn-sm btn-outline-warning" title="Modifier">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% if bulletin.statut != 'VALIDE' %}
+                                                        <button class="btn btn-sm btn-outline-success" 
+                                                                onclick="validerBulletin({{ bulletin.pk }})" 
+                                                                title="Valider">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Pagination des bulletins" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-file-alt fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">Aucun bulletin trouvé</h4>
+                    <p class="text-muted mb-4">
+                        Vous n'avez pas encore de bulletins à gérer pour vos classes.
+                    </p>
+                    <a href="{% url 'school_management:professeur_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour au tableau de bord
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation pour la validation -->
+<div class="modal fade" id="confirmValidationModal" tabindex="-1" aria-labelledby="confirmValidationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmValidationModalLabel">Confirmer la validation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir valider ce bulletin ?</p>
+                <p class="text-muted small">Une fois validé, le bulletin ne pourra plus être modifié.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="confirmValidationBtn">Valider</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const classe = document.getElementById('filterClasse').value;
+    const trimestre = document.getElementById('filterTrimestre').value;
+    const statut = document.getElementById('filterStatut').value;
+    
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        let show = true;
+        
+        if (classe && row.dataset.classe !== classe) show = false;
+        if (trimestre && row.dataset.trimestre !== trimestre) show = false;
+        if (statut && row.dataset.statut !== statut) show = false;
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('filterClasse').value = '';
+    document.getElementById('filterTrimestre').value = '';
+    document.getElementById('filterStatut').value = '';
+    
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => row.style.display = '');
+}
+
+function validerBulletin(bulletinId) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmValidationModal'));
+    modal.show();
+    
+    document.getElementById('confirmValidationBtn').onclick = function() {
+        fetch(`/ajax/bulletins/${bulletinId}/valider/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+        
+        modal.hide();
+    };
+}
+</script>
+{% endblock %}
+
+
+
+
+
+

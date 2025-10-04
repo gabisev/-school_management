@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'absence{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trash me-2"></i>Supprimer l'absence
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Attention !</h5>
+                        <p class="mb-0">
+                            Vous êtes sur le point de supprimer définitivement cette absence.
+                            Cette action est <strong>irréversible</strong>.
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Détails de l'absence à supprimer</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Informations sur l'élève -->
+                                    <h6 class="text-muted">Élève concerné</h6>
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if object.eleve.photo %}
+                                            <img src="{{ object.eleve.photo.url }}" alt="Photo de {{ object.eleve.user.get_full_name }}" class="rounded-circle me-3" width="50" height="50">
+                                        {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">{{ object.eleve.user.get_full_name }}</h6>
+                                            <small class="text-muted">{{ object.eleve.numero_etudiant }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ object.eleve.classe.nom }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <!-- Détails de l'absence -->
+                                    <h6 class="text-muted">Détails de l'absence</h6>
+                                    <table class="table table-borderless table-sm">
+                                        <tr>
+                                            <td class="fw-bold">Date :</td>
+                                            <td>{{ object.date|date:"d/m/Y" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Type :</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if object.type_absence == 'MALADIE' %}bg-warning text-dark
+                                                    {% elif object.type_absence == 'RETARD' %}bg-info
+                                                    {% elif object.type_absence == 'AUTRE' %}bg-secondary
+                                                    {% else %}bg-primary{% endif %}">
+                                                    {{ object.get_type_absence_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Période :</td>
+                                            <td>
+                                                {% if object.heure_debut and object.heure_fin %}
+                                                    {{ object.heure_debut|time:"H:i" }} - {{ object.heure_fin|time:"H:i" }}
+                                                {% else %}
+                                                    Journée complète
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Statut :</td>
+                                            <td>
+                                                {% if object.justifiee %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Justifiée
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times me-1"></i>Non justifiée
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {% if object.motif %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6 class="text-muted">Motif</h6>
+                                    <div class="p-2 bg-light rounded">
+                                        {{ object.motif }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if object.commentaire %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6 class="text-muted">Commentaire</h6>
+                                    <div class="p-2 bg-light rounded">
+                                        {{ object.commentaire|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Enregistrée le {{ object.date_creation|date:"d/m/Y à H:i" }}
+                                        {% if object.date_modification != object.date_creation %}
+                                            • Modifiée le {{ object.date_modification|date:"d/m/Y à H:i" }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avertissement supplémentaire pour les absences non justifiées -->
+                    {% if not object.justifiee %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note :</strong> Cette absence n'est pas justifiée. Sa suppression pourrait affecter les statistiques d'assiduité de l'élève.
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:absence_detail' object.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmation supplémentaire avant suppression
+    const deleteForm = document.querySelector('form[method="post"]');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            const eleveName = "{{ object.eleve.user.get_full_name }}";
+            const absenceDate = "{{ object.date|date:'d/m/Y' }}";
+            
+            if (!confirm(`Êtes-vous vraiment sûr de vouloir supprimer l'absence de ${eleveName} du ${absenceDate} ?\n\nCette action est définitive et ne peut pas être annulée.`)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
+
+
+

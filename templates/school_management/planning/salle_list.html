@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Gestion des Salles{% endblock %}
+
+{% block extra_css %}
+<style>
+    .salle-card {
+        transition: transform 0.2s ease-in-out;
+        border-left: 4px solid #007bff;
+    }
+    .salle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .type-badge {
+        font-size: 0.8em;
+        padding: 0.25rem 0.5rem;
+    }
+    .capacity-badge {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+    }
+    .equipment-list {
+        max-height: 100px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-door-open me-2"></i>Gestion des Salles</h2>
+                    <p class="text-muted">Gérez les salles et espaces de l'établissement</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:salle_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouvelle Salle
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="type_salle" class="form-label">Type de salle</label>
+                            <select name="type_salle" id="type_salle" class="form-select">
+                                <option value="">Tous les types</option>
+                                <option value="COURS" {% if request.GET.type_salle == 'COURS' %}selected{% endif %}>Salle de cours</option>
+                                <option value="LABO" {% if request.GET.type_salle == 'LABO' %}selected{% endif %}>Laboratoire</option>
+                                <option value="INFO" {% if request.GET.type_salle == 'INFO' %}selected{% endif %}>Salle informatique</option>
+                                <option value="SPORT" {% if request.GET.type_salle == 'SPORT' %}selected{% endif %}>Salle de sport</option>
+                                <option value="BIBLIO" {% if request.GET.type_salle == 'BIBLIO' %}selected{% endif %}>Bibliothèque</option>
+                                <option value="AUDITORIUM" {% if request.GET.type_salle == 'AUDITORIUM' %}selected{% endif %}>Auditorium</option>
+                                <option value="AUTRE" {% if request.GET.type_salle == 'AUTRE' %}selected{% endif %}>Autre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>Filtrer
+                            </button>
+                            <a href="{% url 'school_management:salle_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Effacer
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste des salles -->
+            {% if salles %}
+                <div class="row">
+                    {% for salle in salles %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card salle-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-door-open me-2"></i>{{ salle.nom }}
+                                    </h5>
+                                    <span class="badge type-badge bg-primary">{{ salle.get_type_salle_display }}</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted">Numéro</small>
+                                            <div class="fw-bold">{{ salle.numero }}</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Capacité</small>
+                                            <div>
+                                                <span class="badge capacity-badge">
+                                                    <i class="fas fa-users me-1"></i>{{ salle.capacite }} places
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if salle.equipements %}
+                                        <div class="mb-3">
+                                            <small class="text-muted">Équipements</small>
+                                            <div class="equipment-list">
+                                                <small>{{ salle.equipements|truncatewords:15 }}</small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            {% if salle.accessible_handicap %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-wheelchair me-1"></i>Accessible
+                                                </span>
+                                            {% endif %}
+                                            {% if not salle.active %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-ban me-1"></i>Inactive
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'school_management:salle_detail' salle.pk %}" 
+                                               class="btn btn-outline-primary" title="Voir détails">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'school_management:salle_update' salle.pk %}" 
+                                               class="btn btn-outline-warning" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'school_management:salle_delete' salle.pk %}" 
+                                               class="btn btn-outline-danger" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Pagination des salles">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.type_salle %}&type_salle={{ request.GET.type_salle }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.type_salle %}&type_salle={{ request.GET.type_salle }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.type_salle %}&type_salle={{ request.GET.type_salle }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.type_salle %}&type_salle={{ request.GET.type_salle }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Aucune salle trouvée</h4>
+                    <p class="text-muted">Commencez par ajouter votre première salle.</p>
+                    <a href="{% url 'school_management:salle_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Ajouter une salle
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

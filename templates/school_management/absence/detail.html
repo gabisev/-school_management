@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de l'absence{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-times me-2"></i>Détails de l'absence
+                    </h4>
+                    <div>
+                        <a href="{% url 'school_management:absence_list' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+                        </a>
+                        {% if not is_eleve %}
+                            <a href="{% url 'school_management:absence_update' absence.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-1"></i>Modifier
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Informations sur l'élève -->
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Informations de l'élève</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if absence.eleve.photo %}
+                                            <img src="{{ absence.eleve.photo.url }}" alt="Photo de {{ absence.eleve.user.get_full_name }}" class="rounded-circle me-3" width="60" height="60">
+                                        {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-user-graduate fa-2x"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-0">
+                                                <a href="{% url 'school_management:eleve_detail' absence.eleve.pk %}" class="text-decoration-none">
+                                                    {{ absence.eleve.user.get_full_name }}
+                                                </a>
+                                            </h5>
+                                            <p class="text-muted mb-0">{{ absence.eleve.numero_etudiant }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <table class="table table-borderless table-sm">
+                                        <tr>
+                                            <td class="fw-bold">Classe :</td>
+                                            <td>
+                                                <a href="{% url 'school_management:classe_detail' absence.eleve.classe.pk %}" class="text-decoration-none">
+                                                    {{ absence.eleve.classe.nom }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Email :</td>
+                                            <td>{{ absence.eleve.user.email|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Téléphone :</td>
+                                            <td>{{ absence.eleve.telephone|default:"-" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Détails de l'absence -->
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Détails de l'absence</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td class="fw-bold">Date :</td>
+                                            <td>
+                                                <strong>{{ absence.date|date:"l d F Y" }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ absence.date|date:"d/m/Y" }}</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Type :</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if absence.type_absence == 'MALADIE' %}bg-warning text-dark
+                                                    {% elif absence.type_absence == 'RETARD' %}bg-info
+                                                    {% elif absence.type_absence == 'AUTRE' %}bg-secondary
+                                                    {% else %}bg-primary{% endif %}">
+                                                    {{ absence.get_type_absence_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Période :</td>
+                                            <td>
+                                                {% if absence.heure_debut and absence.heure_fin %}
+                                                    <span class="badge bg-info">
+                                                        {{ absence.heure_debut|time:"H:i" }} - {{ absence.heure_fin|time:"H:i" }}
+                                                    </span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Durée : 
+                                                        {% with duree=absence.heure_fin|timeuntil:absence.heure_debut %}
+                                                            {{ duree }}
+                                                        {% endwith %}
+                                                    </small>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Journée complète</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Statut :</td>
+                                            <td>
+                                                {% if absence.justifiee %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Justifiée
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times me-1"></i>Non justifiée
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Enregistrée le :</td>
+                                            <td>
+                                                {{ absence.date_creation|date:"d/m/Y à H:i" }}
+                                                {% if absence.date_modification != absence.date_creation %}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Modifiée le {{ absence.date_modification|date:"d/m/Y à H:i" }}
+                                                    </small>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motif et commentaire -->
+                    {% if absence.motif or absence.commentaire %}
+                    <div class="row mt-4">
+                        {% if absence.motif %}
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Motif de l'absence</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-0">{{ absence.motif }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if absence.commentaire %}
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Commentaire</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="mb-0">{{ absence.commentaire|linebreaks }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Historique des absences de l'élève -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h6 class="text-muted">Historique des absences de cet élève</h6>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% if autres_absences %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Type</th>
+                                                        <th>Période</th>
+                                                        <th>Justifiée</th>
+                                                        <th>Motif</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for autre_absence in autres_absences %}
+                                                        <tr {% if autre_absence.pk == absence.pk %}class="table-primary"{% elif not autre_absence.justifiee %}class="table-warning"{% endif %}>
+                                                            <td>{{ autre_absence.date|date:"d/m/Y" }}</td>
+                                                            <td>
+                                                                <span class="badge badge-sm 
+                                                                    {% if autre_absence.type_absence == 'MALADIE' %}bg-warning text-dark
+                                                                    {% elif autre_absence.type_absence == 'RETARD' %}bg-info
+                                                                    {% else %}bg-secondary{% endif %}">
+                                                                    {{ autre_absence.get_type_absence_display }}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                {% if autre_absence.heure_debut and autre_absence.heure_fin %}
+                                                                    {{ autre_absence.heure_debut|time:"H:i" }} - {{ autre_absence.heure_fin|time:"H:i" }}
+                                                                {% else %}
+                                                                    Journée
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                {% if autre_absence.justifiee %}
+                                                                    <i class="fas fa-check text-success"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-times text-danger"></i>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ autre_absence.motif|default:"-"|truncatechars:30 }}</td>
+                                                            <td>
+                                                                {% if autre_absence.pk != absence.pk %}
+                                                                    <a href="{% url 'school_management:absence_detail' autre_absence.pk %}" class="btn btn-sm btn-outline-info">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span class="badge bg-primary">Actuelle</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                        <div class="row mt-3">
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h5 class="text-primary">{{ total_absences }}</h5>
+                                                    <small class="text-muted">Total absences</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h5 class="text-success">{{ absences_justifiees }}</h5>
+                                                    <small class="text-muted">Justifiées</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h5 class="text-danger">{{ absences_non_justifiees }}</h5>
+                                                    <small class="text-muted">Non justifiées</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h5 class="text-warning">{{ retards }}</h5>
+                                                    <small class="text-muted">Retards</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            C'est la première absence enregistrée pour cet élève.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="{% url 'school_management:absence_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+                                    </a>
+                                </div>
+                                {% if not is_eleve %}
+                                <div>
+                                    <a href="{% url 'school_management:absence_update' absence.pk %}" class="btn btn-primary me-2">
+                                        <i class="fas fa-edit me-1"></i>Modifier
+                                    </a>
+                                    <a href="{% url 'school_management:absence_delete' absence.pk %}" class="btn btn-danger">
+                                        <i class="fas fa-trash me-1"></i>Supprimer
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

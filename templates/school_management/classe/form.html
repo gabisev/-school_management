@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}
+        Modifier {{ object.nom }} - Gestion École
+    {% else %}
+        Ajouter une classe - Gestion École
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}
+        Modifier la classe
+    {% else %}
+        Ajouter une classe
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:classe_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+{% if object %}
+<a href="{% url 'school_management:classe_detail' object.pk %}" class="btn btn-info">
+    <i class="fas fa-eye me-1"></i>
+    Voir les détails
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0">
+                    <i class="fas fa-users me-2"></i>
+                    {% if object %}Modifier la classe "{{ object.nom }}"{% else %}Informations de la classe{% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label">
+                                Nom de la classe <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                                <div class="text-danger small">{{ form.nom.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Exemple : 6ème A, CM2, Terminale S...
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.niveau.id_for_label }}" class="form-label">
+                                Niveau <span class="text-danger">*</span>
+                            </label>
+                            {{ form.niveau }}
+                            {% if form.niveau.errors %}
+                                <div class="text-danger small">{{ form.niveau.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Exemple : Sixième, CM2, Terminale...
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.annee_scolaire.id_for_label }}" class="form-label">
+                                Année scolaire <span class="text-danger">*</span>
+                            </label>
+                            {{ form.annee_scolaire }}
+                            {% if form.annee_scolaire.errors %}
+                                <div class="text-danger small">{{ form.annee_scolaire.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Format : YYYY-YYYY (ex: 2024-2025)
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.effectif_max.id_for_label }}" class="form-label">
+                                Effectif maximum <span class="text-danger">*</span>
+                            </label>
+                            {{ form.effectif_max }}
+                            {% if form.effectif_max.errors %}
+                                <div class="text-danger small">{{ form.effectif_max.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Nombre maximum d'élèves pour cette classe
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if object %}
+                    <!-- Informations supplémentaires pour la modification -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Informations actuelles</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Élèves inscrits :</strong><br>
+                                        <span class="badge bg-primary">{{ object.effectif_actuel }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Places disponibles :</strong><br>
+                                        <span class="badge bg-success">{{ object.effectif_max|add:object.effectif_actuel|add:"-"|add:object.effectif_actuel }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Professeurs assignés :</strong><br>
+                                        <span class="badge bg-info">{{ object.professeurs.count }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Évaluations :</strong><br>
+                                        <span class="badge bg-warning">{{ object.evaluations.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'school_management:classe_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if object %}Modifier{% else %}Créer{% endif %} la classe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if not object %}
+        <!-- Conseils pour la création -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="m-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Conseils
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Nommage des classes</h6>
+                        <ul class="small">
+                            <li>Utilisez des noms clairs et distincts</li>
+                            <li>Incluez le niveau et la section si nécessaire</li>
+                            <li>Exemples : "6ème A", "CM2 B", "Terminale S1"</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Effectifs recommandés</h6>
+                        <ul class="small">
+                            <li>Maternelle : 20-25 élèves</li>
+                            <li>Primaire : 25-30 élèves</li>
+                            <li>Collège/Lycée : 30-35 élèves</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-génération de l'année scolaire si vide
+    document.addEventListener('DOMContentLoaded', function() {
+        const anneeInput = document.getElementById('{{ form.annee_scolaire.id_for_label }}');
+        
+        if (anneeInput && !anneeInput.value) {
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth();
+            
+            // Si nous sommes après août (mois 7), c'est la nouvelle année scolaire
+            if (currentMonth >= 7) {
+                anneeInput.value = currentYear + '-' + (currentYear + 1);
+            } else {
+                anneeInput.value = (currentYear - 1) + '-' + currentYear;
+            }
+        }
+    });
+
+    // Validation de l'effectif maximum
+    document.getElementById('{{ form.effectif_max.id_for_label }}').addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value && (value < 5 || value > 50)) {
+            this.setCustomValidity('L\'effectif doit être entre 5 et 50 élèves');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+</script>
+{% endblock %}
+

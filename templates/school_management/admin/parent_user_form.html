@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .form-header h2 {
+        margin: 0;
+        font-weight: 700;
+    }
+    
+    .form-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .form-section h5 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-section h5 i {
+        margin-right: 10px;
+        color: #17a2b8;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #17a2b8;
+        box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 15px 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-submit i {
+        margin-right: 10px;
+    }
+    
+    .btn-cancel {
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 15px 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        margin-left: 15px;
+    }
+    
+    .btn-cancel:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+    }
+    
+    .btn-cancel i {
+        margin-right: 10px;
+    }
+    
+    .form-actions {
+        text-align: center;
+        padding-top: 20px;
+        border-top: 2px solid #e9ecef;
+        margin-top: 30px;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+    
+    .parent-info {
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid #00bcd4;
+    }
+    
+    .parent-info h6 {
+        color: #006064;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .parent-info p {
+        margin: 5px 0;
+        color: #424242;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- En-tête -->
+            <div class="form-header">
+                <h2><i class="fas fa-user-friends me-3"></i>{{ title }}</h2>
+                <p>Gérez les informations du parent et son compte de connexion</p>
+            </div>
+
+            <!-- Informations du parent -->
+            {% if parent %}
+            <div class="parent-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Informations actuelles du parent</h6>
+                <p><strong>Nom complet :</strong> {{ parent.prenom }} {{ parent.nom }}</p>
+                <p><strong>Profession :</strong> {{ parent.profession|default:"Non renseigné" }}</p>
+                <p><strong>Relation :</strong> {{ parent.get_relation_display }}</p>
+                <p><strong>Email :</strong> {{ parent.email|default:"Non renseigné" }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Formulaire -->
+            <div class="form-container">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Informations de connexion -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-user-lock"></i>Informations de connexion</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.username.id_for_label }}">
+                                        Nom d'utilisateur *
+                                    </label>
+                                    {{ form.username }}
+                                    {% if form.username.help_text %}
+                                        <div class="help-text">{{ form.username.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.username.errors %}
+                                        <div class="error-message">{{ form.username.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                                        Email
+                                    </label>
+                                    {{ form.email }}
+                                    {% if form.email.help_text %}
+                                        <div class="help-text">{{ form.email.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.email.errors %}
+                                        <div class="error-message">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.first_name.id_for_label }}">
+                                        Prénom *
+                                    </label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.help_text %}
+                                        <div class="help-text">{{ form.first_name.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.first_name.errors %}
+                                        <div class="error-message">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.last_name.id_for_label }}">
+                                        Nom *
+                                    </label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.help_text %}
+                                        <div class="help-text">{{ form.last_name.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.last_name.errors %}
+                                        <div class="error-message">{{ form.last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.password.id_for_label }}">
+                                        Mot de passe
+                                    </label>
+                                    {{ form.password }}
+                                    {% if form.password.help_text %}
+                                        <div class="help-text">{{ form.password.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.password.errors %}
+                                        <div class="error-message">{{ form.password.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations personnelles -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-user"></i>Informations personnelles</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.nom.id_for_label }}">
+                                        Nom *
+                                    </label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}
+                                        <div class="error-message">{{ form.nom.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.prenom.id_for_label }}">
+                                        Prénom *
+                                    </label>
+                                    {{ form.prenom }}
+                                    {% if form.prenom.errors %}
+                                        <div class="error-message">{{ form.prenom.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.sexe.id_for_label }}">
+                                        Sexe *
+                                    </label>
+                                    {{ form.sexe }}
+                                    {% if form.sexe.errors %}
+                                        <div class="error-message">{{ form.sexe.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.relation.id_for_label }}">
+                                        Relation avec l'enfant *
+                                    </label>
+                                    {{ form.relation }}
+                                    {% if form.relation.errors %}
+                                        <div class="error-message">{{ form.relation.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.date_naissance.id_for_label }}">
+                                        Date de naissance
+                                    </label>
+                                    {{ form.date_naissance }}
+                                    {% if form.date_naissance.errors %}
+                                        <div class="error-message">{{ form.date_naissance.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.lieu_naissance.id_for_label }}">
+                                        Lieu de naissance
+                                    </label>
+                                    {{ form.lieu_naissance }}
+                                    {% if form.lieu_naissance.errors %}
+                                        <div class="error-message">{{ form.lieu_naissance.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.nationalite.id_for_label }}">
+                                        Nationalité
+                                    </label>
+                                    {{ form.nationalite }}
+                                    {% if form.nationalite.errors %}
+                                        <div class="error-message">{{ form.nationalite.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.profession.id_for_label }}">
+                                        Profession
+                                    </label>
+                                    {{ form.profession }}
+                                    {% if form.profession.errors %}
+                                        <div class="error-message">{{ form.profession.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-address-book"></i>Informations de contact</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.telephone.id_for_label }}">
+                                        Téléphone
+                                    </label>
+                                    {{ form.telephone }}
+                                    {% if form.telephone.errors %}
+                                        <div class="error-message">{{ form.telephone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                                        Email personnel
+                                    </label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="error-message">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.adresse.id_for_label }}">
+                                Adresse
+                            </label>
+                            {{ form.adresse }}
+                            {% if form.adresse.errors %}
+                                <div class="error-message">{{ form.adresse.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Photo -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-camera"></i>Photo</h5>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.photo.id_for_label }}">
+                                Photo de profil
+                            </label>
+                            {{ form.photo }}
+                            {% if form.photo.errors %}
+                                <div class="error-message">{{ form.photo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save"></i>
+                            {% if parent.user %}Modifier{% else %}Créer le compte{% endif %}
+                        </button>
+                        <a href="{% url 'school_management:admin_user_management' %}" class="btn-cancel">
+                            <i class="fas fa-times"></i>
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation d'entrée
+    const formContainer = document.querySelector('.form-container');
+    formContainer.style.opacity = '0';
+    formContainer.style.transform = 'translateY(20px)';
+    formContainer.style.transition = 'all 0.5s ease';
+    
+    setTimeout(() => {
+        formContainer.style.opacity = '1';
+        formContainer.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Synchronisation automatique des champs nom/prénom
+    const prenomField = document.getElementById('id_prenom');
+    const nomField = document.getElementById('id_nom');
+    const firstNameField = document.getElementById('id_first_name');
+    const lastNameField = document.getElementById('id_last_name');
+    
+    if (prenomField && firstNameField) {
+        prenomField.addEventListener('input', function() {
+            firstNameField.value = this.value;
+        });
+    }
+    
+    if (nomField && lastNameField) {
+        nomField.addEventListener('input', function() {
+            lastNameField.value = this.value;
+        });
+    }
+    
+    // Génération automatique du nom d'utilisateur
+    const usernameField = document.getElementById('id_username');
+    if (prenomField && nomField && usernameField) {
+        function generateUsername() {
+            const prenom = prenomField.value.toLowerCase().trim();
+            const nom = nomField.value.toLowerCase().trim();
+            if (prenom && nom) {
+                usernameField.value = prenom + '.' + nom;
+            }
+        }
+        
+        prenomField.addEventListener('input', generateUsername);
+        nomField.addEventListener('input', generateUsername);
+    }
+});
+</script>
+{% endblock %}
+
+
+
+

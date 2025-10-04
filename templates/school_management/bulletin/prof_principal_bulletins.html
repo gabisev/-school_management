@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Bulletins - Professeur Principal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Gestion des Bulletins
+                    </h2>
+                    <p class="text-muted mb-0">Génération et gestion des bulletins de vos classes</p>
+                </div>
+                {% if user_type == 'admin' %}
+                    <a href="{% url 'school_management:admin_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour au tableau de bord
+                    </a>
+                {% else %}
+                    <a href="{% url 'school_management:professeur_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour au tableau de bord
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_bulletins }}</h4>
+                            <p class="mb-0">Total des bulletins</p>
+                        </div>
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ bulletins_brouillon }}</h4>
+                            <p class="mb-0">Brouillons</p>
+                        </div>
+                        <i class="fas fa-edit fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ bulletins_valides }}</h4>
+                            <p class="mb-0">Validés</p>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ classes_prof_principal|length }}</h4>
+                            <p class="mb-0">Classes gérées</p>
+                        </div>
+                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-magic me-2"></i>
+                        Actions Rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for classe in classes_prof_principal %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">{{ classe.nom }}</h6>
+                                        <p class="card-text small text-muted">
+                                            {{ classe.eleves.count }} élève(s)
+                                        </p>
+                                        <div class="btn-group btn-group-sm mb-2" role="group">
+                                            <a href="{% url 'school_management:generer_bulletins_classe' classe.id 1 %}" 
+                                               class="btn btn-outline-primary" 
+                                               onclick="return confirm('Générer les bulletins du 1er trimestre pour {{ classe.nom }} ?')">
+                                                T1
+                                            </a>
+                                            <a href="{% url 'school_management:generer_bulletins_classe' classe.id 2 %}" 
+                                               class="btn btn-outline-primary"
+                                               onclick="return confirm('Générer les bulletins du 2ème trimestre pour {{ classe.nom }} ?')">
+                                                T2
+                                            </a>
+                                            <a href="{% url 'school_management:generer_bulletins_classe' classe.id 3 %}" 
+                                               class="btn btn-outline-primary"
+                                               onclick="return confirm('Générer les bulletins du 3ème trimestre pour {{ classe.nom }} ?')">
+                                                T3
+                                            </a>
+                                        </div>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'school_management:publier_bulletins_classe' classe.id 1 %}" 
+                                               class="btn btn-outline-success" 
+                                               onclick="return confirm('Publier les bulletins du 1er trimestre pour {{ classe.nom }} ? Ils seront visibles par les parents et élèves.')">
+                                                <i class="fas fa-share-alt me-1"></i>T1
+                                            </a>
+                                            <a href="{% url 'school_management:publier_bulletins_classe' classe.id 2 %}" 
+                                               class="btn btn-outline-success"
+                                               onclick="return confirm('Publier les bulletins du 2ème trimestre pour {{ classe.nom }} ? Ils seront visibles par les parents et élèves.')">
+                                                <i class="fas fa-share-alt me-1"></i>T2
+                                            </a>
+                                            <a href="{% url 'school_management:publier_bulletins_classe' classe.id 3 %}" 
+                                               class="btn btn-outline-success"
+                                               onclick="return confirm('Publier les bulletins du 3ème trimestre pour {{ classe.nom }} ? Ils seront visibles par les parents et élèves.')">
+                                                <i class="fas fa-share-alt me-1"></i>T3
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des bulletins par classe -->
+    <div class="row">
+        {% for classe_nom, bulletins_classe in bulletins_par_classe.items %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chalkboard me-2"></i>
+                            {{ classe_nom }}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if bulletins_classe %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Élève</th>
+                                            <th>Trimestre</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for bulletin in bulletins_classe %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ bulletin.eleve.nom_complet }}</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">T{{ bulletin.trimestre }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if bulletin.statut == 'BROUILLON' %}
+                                                        <span class="badge bg-warning">Brouillon</span>
+                                                    {% elif bulletin.statut == 'EN_ATTENTE' %}
+                                                        <span class="badge bg-info">En attente</span>
+                                                    {% elif bulletin.statut == 'PUBLIE' %}
+                                                        <span class="badge bg-success">Publié</span>
+                                                    {% elif bulletin.statut == 'VALIDE' %}
+                                                        <span class="badge bg-success">Validé</span>
+                                                    {% elif bulletin.statut == 'ARCHIVE' %}
+                                                        <span class="badge bg-secondary">Archivé</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'school_management:bulletin_detaille' bulletin.pk %}" 
+                                                       class="btn btn-outline-primary" title="Voir le bulletin détaillé">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:bulletin_prof_detail' bulletin.pk %}" 
+                                                       class="btn btn-outline-info" title="Voir le bulletin simple">
+                                                        <i class="fas fa-file-alt"></i>
+                                                    </a>
+                                                    {% if bulletin.statut == 'BROUILLON' %}
+                                                        <a href="{% url 'school_management:bulletin_update' bulletin.pk %}" 
+                                                           class="btn btn-outline-warning" title="Modifier">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if bulletin.statut == 'BROUILLON' or bulletin.statut == 'EN_ATTENTE' %}
+                                                        <a href="{% url 'school_management:publier_bulletin' bulletin.pk %}" 
+                                                           class="btn btn-outline-success" title="Publier le bulletin"
+                                                           onclick="return confirm('Publier le bulletin de {{ bulletin.eleve.prenom }} {{ bulletin.eleve.nom }} ? Il sera visible par les parents et l\'élève.')">
+                                                            <i class="fas fa-share-alt"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Aucun bulletin généré pour cette classe.</p>
+                                <p class="small text-muted">Utilisez les boutons d'action rapide ci-dessus pour générer les bulletins.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-4"></i>
+                        <h4 class="text-muted">Aucune classe assignée</h4>
+                        <p class="text-muted">
+                            {% if user_type == 'professeur' %}
+                                Vous n'êtes pas encore assigné comme professeur principal d'une classe.
+                                Contactez l'administrateur pour être assigné à une classe.
+                            {% else %}
+                                Aucune classe n'a de professeur principal assigné.
+                            {% endif %}
+                        </p>
+                        {% if user_type == 'admin' %}
+                            <a href="{% url 'school_management:admin_prof_principal' %}" class="btn btn-primary">
+                                <i class="fas fa-cog me-2"></i>
+                                Gérer les professeurs principaux
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+// Fonction pour confirmer la génération de bulletins
+function confirmerGeneration(classeNom, trimestre) {
+    return confirm(`Êtes-vous sûr de vouloir générer les bulletins du ${trimestre}ème trimestre pour la classe ${classeNom} ?`);
+}
+</script>
+{% endblock %}

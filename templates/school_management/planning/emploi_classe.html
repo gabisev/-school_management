@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Emploi du temps - {{ classe.nom }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .emploi-table {
+        font-size: 0.9em;
+    }
+    .creneau-cell {
+        min-width: 80px;
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px 4px;
+    }
+    .matiere-cell {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 2px;
+        display: block;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+    .matiere-cell:hover {
+        transform: scale(1.05);
+        color: white;
+        text-decoration: none;
+    }
+    .professeur-info {
+        font-size: 0.8em;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+    .salle-info {
+        font-size: 0.8em;
+        color: #28a745;
+        font-weight: bold;
+    }
+    .pause-cell {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-style: italic;
+    }
+    .header-cell {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .creneau-header {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .filters-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border: none;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-calendar-alt me-2"></i>Emploi du temps - {{ classe.nom }}</h2>
+                    <p class="text-muted">{{ classe.niveau }} - Année scolaire {{ annee_scolaire }} - Semestre {{ semestre }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:emploi_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="card filters-card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="annee_scolaire" class="form-label">Année scolaire</label>
+                            <input type="text" name="annee_scolaire" id="annee_scolaire" 
+                                   class="form-control" value="{{ annee_scolaire }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="semestre" class="form-label">Semestre</label>
+                            <select name="semestre" id="semestre" class="form-select">
+                                <option value="1" {% if semestre == 1 %}selected{% endif %}>Semestre 1</option>
+                                <option value="2" {% if semestre == 2 %}selected{% endif %}>Semestre 2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-1"></i>Actualiser
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Emploi du temps -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered emploi-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="header-cell" style="width: 100px;">Créneaux</th>
+                                    {% for jour in "LUNDI,MARDI,MERCREDI,JEUDI,VENDREDI,SAMEDI"|split:"," %}
+                                        <th class="header-cell">{{ jour|title }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for creneau in "08:00,09:00,10:00,11:00,14:00,15:00,16:00,17:00"|split:"," %}
+                                    <tr>
+                                        <td class="creneau-header">
+                                            {{ creneau }}<br>
+                                            <small>{{ creneau|add:"1:00" }}</small>
+                                        </td>
+                                        {% for jour in "LUNDI,MARDI,MERCREDI,JEUDI,VENDREDI,SAMEDI"|split:"," %}
+                                            <td class="creneau-cell">
+                                                {% for emploi in emplois_par_jour|get_item:jour %}
+                                                    {% if emploi.creneau.heure_debut|time:"H:i" == creneau %}
+                                                        <a href="{% url 'school_management:emploi_detail' emploi.pk %}" 
+                                                           class="matiere-cell">
+                                                            {{ emploi.matiere.nom }}
+                                                            <div class="professeur-info">
+                                                                <i class="fas fa-user me-1"></i>{{ emploi.professeur.nom_complet }}
+                                                            </div>
+                                                            <div class="salle-info">
+                                                                <i class="fas fa-door-open me-1"></i>{{ emploi.salle.numero }}
+                                                            </div>
+                                                        </a>
+                                                    {% endif %}
+                                                {% empty %}
+                                                    {% if creneau == "12:00" %}
+                                                        <span class="pause-cell">
+                                                            <i class="fas fa-utensils me-1"></i>Pause
+                                                        </span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Légende -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Légende</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="matiere-cell me-2" style="width: 20px; height: 20px; padding: 0;"></div>
+                                        <small>Matière</small>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-user text-muted me-2"></i>
+                                        <small>Professeur</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-door-open text-success me-2"></i>
+                                        <small>Salle</small>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-utensils text-muted me-2"></i>
+                                        <small>Pause</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="h5 text-primary mb-0">
+                                        {% widthratio emplois_par_jour|length 1 1 %}
+                                    </div>
+                                    <small class="text-muted">Cours/semaine</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h5 text-success mb-0">
+                                        {{ classe.effectif_actuel }}
+                                    </div>
+                                    <small class="text-muted">Élèves</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h5 text-warning mb-0">
+                                        {{ classe.prof_principal.nom_complet|default:"Non assigné"|truncatechars:15 }}
+                                    </div>
+                                    <small class="text-muted">Prof. Principal</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animation des cellules au survol
+    const matiereCells = document.querySelectorAll('.matiere-cell');
+    matiereCells.forEach(cell => {
+        cell.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        cell.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

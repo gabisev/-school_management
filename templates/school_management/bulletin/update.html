@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier le Bulletin - {{ bulletin.eleve.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient-warning text-dark">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="mb-1">
+                                <i class="fas fa-edit me-2"></i>
+                                Modifier le Bulletin
+                            </h3>
+                            <p class="mb-0 opacity-75">
+                                {{ bulletin.eleve.nom_complet }} - Trimestre {{ bulletin.trimestre }} - {{ bulletin.annee_scolaire }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-{% if bulletin.statut == 'VALIDE' %}success{% elif bulletin.statut == 'EN_ATTENTE' %}warning{% else %}secondary{% endif %} fs-6">
+                                {{ bulletin.get_statut_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" id="bulletinForm">
+                {% csrf_token %}
+                
+                <!-- Informations générales -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Informations générales
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Appréciation générale</label>
+                                    {{ form.appreciation_generale }}
+                                    {% if form.appreciation_generale.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.appreciation_generale.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Appréciation du professeur principal</label>
+                                    {{ form.appreciation_prof_principal }}
+                                    {% if form.appreciation_prof_principal.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.appreciation_prof_principal.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Statut du bulletin</label>
+                                    {{ form.statut }}
+                                    {% if form.statut.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.statut.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes par matière -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-book me-2"></i>
+                            Appréciations par matière
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if notes_formset %}
+                            {{ notes_formset.management_form }}
+                            
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Matière</th>
+                                            <th class="text-center">Coefficient</th>
+                                            <th class="text-center">Moyenne</th>
+                                            <th>Appréciation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for form in notes_formset %}
+                                            <tr>
+                                                <td class="fw-bold">
+                                                    <i class="fas fa-book text-primary me-2"></i>
+                                                    {{ form.instance.matiere.nom }}
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary">{{ form.instance.coefficient }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-{% if form.instance.moyenne_matiere >= 12 %}success{% elif form.instance.moyenne_matiere >= 10 %}warning{% else %}danger{% endif %} fs-6">
+                                                        {{ form.instance.moyenne_matiere }}/20
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ form.id }}
+                                                    {{ form.appreciation }}
+                                                    {% if form.appreciation.errors %}
+                                                        <div class="text-danger small mt-1">
+                                                            {{ form.appreciation.errors.0 }}
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                                <p class="text-muted mb-0">Aucune note disponible pour ce trimestre.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Résumé des résultats -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Résumé des résultats
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="mb-0 text-{% if bulletin.moyenne_generale >= 12 %}success{% elif bulletin.moyenne_generale >= 10 %}warning{% else %}danger{% endif %}">
+                                        {{ bulletin.moyenne_generale|default:"--" }}
+                                    </h4>
+                                    <small class="text-muted">Moyenne générale</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="mb-0 text-info">
+                                        {{ bulletin.rang|default:"--" }}{% if bulletin.rang %}/{{ bulletin.effectif_classe }}{% endif %}
+                                    </h4>
+                                    <small class="text-muted">Rang</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h4 class="mb-0 text-secondary">
+                                        {{ bulletin.moyenne_classe|default:"--" }}
+                                    </h4>
+                                    <small class="text-muted">Moyenne classe</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="mb-0 text-primary">
+                                    {{ total_matieres }}
+                                </h4>
+                                <small class="text-muted">Matières</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-save me-2"></i>
+                        Enregistrer les modifications
+                    </button>
+                    
+                    <a href="{% url 'school_management:bulletin_prof_detail' bulletin.pk %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-times me-2"></i>
+                        Annuler
+                    </a>
+                    
+                    <a href="{% url 'school_management:bulletin_prof_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Retour à la liste
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validation du formulaire
+    const form = document.getElementById('bulletinForm');
+    
+    form.addEventListener('submit', function(e) {
+        const statut = document.querySelector('select[name="statut"]').value;
+        
+        if (statut === 'VALIDE') {
+            if (!confirm('Êtes-vous sûr de vouloir valider ce bulletin ? Une fois validé, il ne pourra plus être modifié.')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // Auto-resize des textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+
+
+

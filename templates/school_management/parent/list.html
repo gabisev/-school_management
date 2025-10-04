@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des parents - Gestion École{% endblock %}
+
+{% block page_title %}Gestion des parents{% endblock %}
+
+{% block page_actions %}
+{% if is_admin %}
+<a href="{% url 'school_management:parent_create' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i>
+    Ajouter un parent
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Filtres et recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="search" 
+                       name="search" 
+                       value="{{ request.GET.search }}"
+                       placeholder="Nom, prénom ou profession...">
+            </div>
+            <div class="col-md-3">
+                <label for="relation" class="form-label">Relation</label>
+                <select name="relation" id="relation" class="form-control">
+                    <option value="">Toutes les relations</option>
+                    <option value="PERE" {% if request.GET.relation == "PERE" %}selected{% endif %}>Père</option>
+                    <option value="MERE" {% if request.GET.relation == "MERE" %}selected{% endif %}>Mère</option>
+                    <option value="TUTEUR" {% if request.GET.relation == "TUTEUR" %}selected{% endif %}>Tuteur</option>
+                    <option value="AUTRE" {% if request.GET.relation == "AUTRE" %}selected{% endif %}>Autre</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Rechercher
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des parents -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0">
+            <i class="fas fa-users me-2"></i>
+            Liste des parents
+            {% if parents %}
+                <span class="badge bg-primary ms-2">{{ parents|length }}</span>
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        {% if parents %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Photo</th>
+                            <th>Nom complet</th>
+                            <th>Relation</th>
+                            <th>Profession</th>
+                            <th>Téléphone</th>
+                            <th>Email</th>
+                            <th>Enfants</th>
+                            {% if is_admin %}<th>Actions</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for parent in parents %}
+                            <tr>
+                                <td>
+                                    {% if parent.photo %}
+                                        <img src="{{ parent.photo.url }}" alt="{{ parent.get_nom_complet }}" 
+                                             class="rounded-circle" width="40" height="40">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'school_management:parent_detail' parent.pk %}" class="text-decoration-none fw-bold">
+                                        {{ parent.get_nom_complet }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if parent.user %}
+                                            {{ parent.user.username }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if parent.relation == 'PERE' %}bg-primary
+                                        {% elif parent.relation == 'MERE' %}bg-pink
+                                        {% elif parent.relation == 'TUTEUR' %}bg-warning text-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ parent.get_relation_display }}
+                                    </span>
+                                </td>
+                                <td>{{ parent.profession|default:"-" }}</td>
+                                <td>
+                                    {% if parent.telephone %}
+                                        <a href="tel:{{ parent.telephone }}" class="text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>{{ parent.telephone }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if parent.email %}
+                                        <a href="mailto:{{ parent.email }}" class="text-decoration-none">
+                                            <i class="fas fa-envelope me-1"></i>{{ parent.email }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ parent.get_enfants.count }}</span>
+                                    {% if parent.get_enfants.count > 0 %}
+                                        <br>
+                                        <small class="text-muted">
+                                            {% for enfant in parent.get_enfants.all|slice:":2" %}
+                                                {{ enfant.nom }} {{ enfant.prenom }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if parent.get_enfants.count > 2 %}
+                                                <br>+{{ parent.get_enfants.count|add:"-2" }} autre(s)
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                {% if is_admin %}
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'school_management:parent_detail' parent.pk %}" 
+                                           class="btn btn-outline-info" title="Voir les détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'school_management:parent_update' parent.pk %}" 
+                                           class="btn btn-outline-warning" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'school_management:parent_delete' parent.pk %}" 
+                                           class="btn btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Pagination des parents" class="p-3">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.relation %}&relation={{ request.GET.relation }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.relation %}&relation={{ request.GET.relation }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.relation %}&relation={{ request.GET.relation }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.relation %}&relation={{ request.GET.relation }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center p-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun parent trouvé</h5>
+                <p class="text-muted">Aucun parent ne correspond aux critères de recherche.</p>
+                {% if is_admin %}
+                    <a href="{% url 'school_management:parent_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Ajouter le premier parent
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier {{ object.titre }}{% else %}Nouvelle communication{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Modifier la communication{% else %}Nouvelle communication{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'school_management:communication_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bullhorn me-2"></i>
+                    {% if object %}Modifier la communication{% else %}Créer une nouvelle communication{% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Titre -->
+                    <div class="mb-4">
+                        <label for="{{ form.titre.id_for_label }}" class="form-label">
+                            {{ form.titre.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.titre }}
+                        {% if form.titre.errors %}
+                            <div class="text-danger small">{{ form.titre.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Contenu -->
+                    <div class="mb-4">
+                        <label for="{{ form.contenu.id_for_label }}" class="form-label">
+                            {{ form.contenu.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.contenu }}
+                        {% if form.contenu.errors %}
+                            <div class="text-danger small">{{ form.contenu.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Type et Priorité -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.type_communication.id_for_label }}" class="form-label">
+                                    {{ form.type_communication.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.type_communication }}
+                                {% if form.type_communication.errors %}
+                                    <div class="text-danger small">{{ form.type_communication.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.priorite.id_for_label }}" class="form-label">
+                                    {{ form.priorite.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.priorite }}
+                                {% if form.priorite.errors %}
+                                    <div class="text-danger small">{{ form.priorite.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Destinataires -->
+                    <div class="mb-4">
+                        <label for="{{ form.destinataires.id_for_label }}" class="form-label">
+                            {{ form.destinataires.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.destinataires }}
+                        {% if form.destinataires.errors %}
+                            <div class="text-danger small">{{ form.destinataires.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Classe cible (affiché conditionnellement) -->
+                    <div class="mb-4" id="classe-field" style="display: none;">
+                        <label for="{{ form.classe_cible.id_for_label }}" class="form-label">
+                            {{ form.classe_cible.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.classe_cible }}
+                        {% if form.classe_cible.errors %}
+                            <div class="text-danger small">{{ form.classe_cible.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Dates -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.date_publication.id_for_label }}" class="form-label">
+                                    {{ form.date_publication.label }}
+                                </label>
+                                {{ form.date_publication }}
+                                {% if form.date_publication.errors %}
+                                    <div class="text-danger small">{{ form.date_publication.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Laissez vide pour publier immédiatement</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.date_expiration.id_for_label }}" class="form-label">
+                                    {{ form.date_expiration.label }}
+                                </label>
+                                {{ form.date_expiration }}
+                                {% if form.date_expiration.errors %}
+                                    <div class="text-danger small">{{ form.date_expiration.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Laissez vide pour aucune expiration</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pièce jointe -->
+                    <div class="mb-4">
+                        <label for="{{ form.piece_jointe.id_for_label }}" class="form-label">
+                            {{ form.piece_jointe.label }}
+                        </label>
+                        {{ form.piece_jointe }}
+                        {% if form.piece_jointe.errors %}
+                            <div class="text-danger small">{{ form.piece_jointe.errors.0 }}</div>
+                        {% endif %}
+                        {% if object and object.piece_jointe %}
+                            <div class="mt-2">
+                                <small class="text-muted">Fichier actuel :</small><br>
+                                <a href="{{ object.piece_jointe.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-download me-1"></i>{{ object.piece_jointe.name|slice:"15:" }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Formats acceptés : PDF, DOC, DOCX, JPG, JPEG, PNG</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{% url 'school_management:communication_list' %}" class="btn btn-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            {% if object %}Mettre à jour{% else %}Publier{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aide -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Conseils
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Types de communication</h6>
+                    <ul class="mb-0">
+                        <li><strong>Information :</strong> Annonces générales</li>
+                        <li><strong>Urgent :</strong> Messages importants</li>
+                        <li><strong>Événement :</strong> Sorties, fêtes, etc.</li>
+                        <li><strong>Rappel :</strong> Rappels de dates importantes</li>
+                        <li><strong>Conseil :</strong> Conseils pédagogiques</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Destinataires</h6>
+                    <ul class="mb-0">
+                        <li><strong>Tous :</strong> Visible par tous</li>
+                        <li><strong>Parents :</strong> Parents uniquement</li>
+                        <li><strong>Élèves :</strong> Élèves uniquement</li>
+                        <li><strong>Professeurs :</strong> Professeurs uniquement</li>
+                        <li><strong>Classe :</strong> Classe spécifique</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-calendar me-2"></i>Planification</h6>
+                    <p class="mb-0">
+                        Vous pouvez programmer la publication et l'expiration de vos communications.
+                        Laissez les champs vides pour une publication immédiate sans expiration.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleClasseField() {
+    const destinataires = document.getElementById('{{ form.destinataires.id_for_label }}');
+    const classeField = document.getElementById('classe-field');
+    
+    if (destinataires.value === 'CLASSE') {
+        classeField.style.display = 'block';
+    } else {
+        classeField.style.display = 'none';
+    }
+}
+
+// Initialiser l'état au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    toggleClasseField();
+});
+</script>
+{% endblock %}
+
+
+
+
+
+

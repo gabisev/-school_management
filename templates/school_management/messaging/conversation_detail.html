@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}{{ conversation.titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête de la conversation -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ conversation.titre }}</h4>
+                            <small class="text-muted">
+                                <span class="badge bg-secondary">{{ conversation.get_type_conversation_display }}</span>
+                                {% if conversation.classe %}
+                                    • <i class="fas fa-chalkboard me-1"></i>{{ conversation.classe.nom }}
+                                {% endif %}
+                                • <i class="fas fa-users me-1"></i>{{ participants.count }} participant(s)
+                                • <i class="fas fa-user-crown me-1"></i>Créateur: {{ conversation.createur.get_full_name }}
+                            </small>
+                        </div>
+                        <div class="btn-group">
+                            {% if can_manage_participants %}
+                                <a href="{% url 'school_management:add_participants' conversation.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-user-plus me-1"></i>
+                                    Ajouter des participants
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'school_management:conversation_list' %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Retour
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Messages -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-comments me-2"></i>
+                        Messages
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Zone des messages -->
+                    <div id="messages-container" class="messages-container">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="message-item {% if message.expediteur == user %}message-sent{% else %}message-received{% endif %}">
+                                    <div class="message-content">
+                                        <div class="message-header">
+                                            <strong>{{ message.expediteur.get_full_name }}</strong>
+                                            <small class="text-muted">{{ message.date_envoi|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <div class="message-text">
+                                            {{ message.contenu|linebreaks }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Aucun message</h5>
+                                <p class="text-muted">Soyez le premier à envoyer un message dans cette conversation !</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Formulaire d'envoi de message -->
+                <div class="card-footer">
+                    <form method="post" action="{% url 'school_management:send_message' conversation.pk %}" id="message-form">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            {{ message_form.contenu }}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participants -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Participants
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for participant in participants %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ participant.user.get_full_name }}</h6>
+                                    <small class="text-muted">
+                                        {% if participant.user.eleve %}
+                                            <i class="fas fa-graduation-cap me-1"></i>Élève
+                                        {% elif participant.user.professeur %}
+                                            <i class="fas fa-chalkboard-teacher me-1"></i>Professeur
+                                        {% elif participant.user.parent %}
+                                            <i class="fas fa-user-friends me-1"></i>Parent
+                                        {% else %}
+                                            <i class="fas fa-user-shield me-1"></i>Administrateur
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% if participant.user != user and can_manage_participants %}
+                                    <a href="{% url 'school_management:remove_participant' conversation.pk participant.user.pk %}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir retirer {{ participant.user.get_full_name }} de cette conversation ?')">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations de la conversation -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Créée le :</dt>
+                        <dd class="col-sm-8">{{ conversation.date_creation|date:"d/m/Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-4">Dernière activité :</dt>
+                        <dd class="col-sm-8">{{ conversation.date_modification|date:"d/m/Y H:i" }}</dd>
+                        
+                        <dt class="col-sm-4">Type :</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-secondary">{{ conversation.get_type_conversation_display }}</span>
+                        </dd>
+                        
+                        {% if conversation.classe %}
+                            <dt class="col-sm-4">Classe :</dt>
+                            <dd class="col-sm-8">{{ conversation.classe.nom }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.messages-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.message-item {
+    margin-bottom: 1rem;
+    display: flex;
+}
+
+.message-sent {
+    justify-content: flex-end;
+}
+
+.message-received {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    position: relative;
+}
+
+.message-sent .message-content {
+    background-color: #007bff;
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.message-received .message-content {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #dee2e6;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.message-sent .message-header {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-received .message-header {
+    color: #6c757d;
+}
+
+.message-text {
+    line-height: 1.4;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Scrollbar personnalisée */
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+
+<script>
+// Auto-scroll vers le bas des messages
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+});
+
+// Auto-refresh des messages (optionnel)
+setInterval(function() {
+    // Ici on pourrait ajouter du code pour rafraîchir les messages
+    // via AJAX si nécessaire
+}, 30000); // Toutes les 30 secondes
+</script>
+{% endblock %}

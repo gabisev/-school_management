@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier{% else %}Créer{% endif %} Créneau
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .time-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-clock me-2"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} Créneau
+                    </h2>
+                    <p class="text-muted">
+                        {% if object %}
+                            Modifiez les informations de ce créneau horaire
+                        {% else %}
+                            Créez un nouveau créneau horaire
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:creneau_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Aperçu du créneau -->
+            <div class="time-preview" id="time-preview">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span id="preview-day">Jour</span>
+                </h5>
+                <div class="h3 mt-2">
+                    <span id="preview-start">--:--</span> - <span id="preview-end">--:--</span>
+                </div>
+                <div class="small">
+                    Durée: <span id="preview-duration">--</span> minutes
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card form-card">
+                <div class="card-header form-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        Informations du créneau
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="creneau-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.jour.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar-day me-2"></i>Jour *
+                                    </label>
+                                    {{ form.jour }}
+                                    {% if form.jour.errors %}
+                                        <div class="text-danger small">{{ form.jour.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.pause.id_for_label }}" class="form-label">
+                                        <i class="fas fa-utensils me-2"></i>Type de créneau
+                                    </label>
+                                    <div class="form-check">
+                                        {{ form.pause }}
+                                        <label class="form-check-label" for="{{ form.pause.id_for_label }}">
+                                            Créneau de pause
+                                        </label>
+                                    </div>
+                                    {% if form.pause.errors %}
+                                        <div class="text-danger small">{{ form.pause.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.heure_debut.id_for_label }}" class="form-label">
+                                        <i class="fas fa-play me-2"></i>Heure de début *
+                                    </label>
+                                    {{ form.heure_debut }}
+                                    {% if form.heure_debut.errors %}
+                                        <div class="text-danger small">{{ form.heure_debut.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.heure_fin.id_for_label }}" class="form-label">
+                                        <i class="fas fa-stop me-2"></i>Heure de fin *
+                                    </label>
+                                    {{ form.heure_fin }}
+                                    {% if form.heure_fin.errors %}
+                                        <div class="text-danger small">{{ form.heure_fin.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.duree_minutes.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hourglass-half me-2"></i>Durée (minutes)
+                                    </label>
+                                    {{ form.duree_minutes }}
+                                    <div class="form-text">Calculée automatiquement si vide</div>
+                                    {% if form.duree_minutes.errors %}
+                                        <div class="text-danger small">{{ form.duree_minutes.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:creneau_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const jourSelect = document.getElementById('id_jour');
+    const heureDebutInput = document.getElementById('id_heure_debut');
+    const heureFinInput = document.getElementById('id_heure_fin');
+    const dureeInput = document.getElementById('id_duree_minutes');
+    const pauseCheckbox = document.getElementById('id_pause');
+    
+    const previewDay = document.getElementById('preview-day');
+    const previewStart = document.getElementById('preview-start');
+    const previewEnd = document.getElementById('preview-end');
+    const previewDuration = document.getElementById('preview-duration');
+    const timePreview = document.getElementById('time-preview');
+
+    // Fonction pour mettre à jour l'aperçu
+    function updatePreview() {
+        const jour = jourSelect.value;
+        const heureDebut = heureDebutInput.value;
+        const heureFin = heureFinInput.value;
+        const pause = pauseCheckbox.checked;
+        
+        // Mettre à jour le jour
+        if (jour) {
+            const jours = {
+                'LUNDI': 'Lundi',
+                'MARDI': 'Mardi',
+                'MERCREDI': 'Mercredi',
+                'JEUDI': 'Jeudi',
+                'VENDREDI': 'Vendredi',
+                'SAMEDI': 'Samedi'
+            };
+            previewDay.textContent = jours[jour] || jour;
+        } else {
+            previewDay.textContent = 'Jour';
+        }
+        
+        // Mettre à jour les heures
+        if (heureDebut) {
+            previewStart.textContent = heureDebut;
+        } else {
+            previewStart.textContent = '--:--';
+        }
+        
+        if (heureFin) {
+            previewEnd.textContent = heureFin;
+        } else {
+            previewEnd.textContent = '--:--';
+        }
+        
+        // Calculer et afficher la durée
+        if (heureDebut && heureFin) {
+            const debut = new Date('2000-01-01T' + heureDebut + ':00');
+            const fin = new Date('2000-01-01T' + heureFin + ':00');
+            const diffMs = fin - debut;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            
+            if (diffMinutes > 0) {
+                previewDuration.textContent = diffMinutes;
+                // Mettre à jour automatiquement le champ durée
+                if (!dureeInput.value) {
+                    dureeInput.value = diffMinutes;
+                }
+            } else {
+                previewDuration.textContent = '--';
+            }
+        } else {
+            previewDuration.textContent = '--';
+        }
+        
+        // Changer la couleur selon le type
+        if (pause) {
+            timePreview.style.background = 'linear-gradient(135deg, #ffc107, #e0a800)';
+        } else {
+            timePreview.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+    }
+
+    // Événements pour mettre à jour l'aperçu
+    jourSelect.addEventListener('change', updatePreview);
+    heureDebutInput.addEventListener('change', updatePreview);
+    heureFinInput.addEventListener('change', updatePreview);
+    pauseCheckbox.addEventListener('change', updatePreview);
+
+    // Validation du formulaire
+    const form = document.getElementById('creneau-form');
+    form.addEventListener('submit', function(e) {
+        const heureDebut = heureDebutInput.value;
+        const heureFin = heureFinInput.value;
+        
+        if (heureDebut && heureFin) {
+            const debut = new Date('2000-01-01T' + heureDebut + ':00');
+            const fin = new Date('2000-01-01T' + heureFin + ':00');
+            
+            if (fin <= debut) {
+                e.preventDefault();
+                alert('L\'heure de fin doit être postérieure à l\'heure de début.');
+                heureFinInput.focus();
+                return false;
+            }
+        }
+    });
+
+    // Mise à jour initiale
+    updatePreview();
+});
+</script>
+{% endblock %}
+
+
+
+

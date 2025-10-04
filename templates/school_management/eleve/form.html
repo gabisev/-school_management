@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}
+        Modifier {{ object.nom_complet }} - Gestion École
+    {% else %}
+        Ajouter un élève - Gestion École
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}
+        Modifier l'élève
+    {% else %}
+        Ajouter un élève
+    {% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:eleve_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+{% if object %}
+<a href="{% url 'school_management:eleve_detail' object.pk %}" class="btn btn-info">
+    <i class="fas fa-eye me-1"></i>
+    Voir le profil
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0">
+                        <i class="fas fa-user me-2"></i>
+                        Informations personnelles
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label">
+                                Nom <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                                <div class="text-danger small">{{ form.nom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.prenom.id_for_label }}" class="form-label">
+                                Prénom <span class="text-danger">*</span>
+                            </label>
+                            {{ form.prenom }}
+                            {% if form.prenom.errors %}
+                                <div class="text-danger small">{{ form.prenom.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.date_naissance.id_for_label }}" class="form-label">
+                                Date de naissance <span class="text-danger">*</span>
+                            </label>
+                            {{ form.date_naissance }}
+                            {% if form.date_naissance.errors %}
+                                <div class="text-danger small">{{ form.date_naissance.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.lieu_naissance.id_for_label }}" class="form-label">
+                                Lieu de naissance <span class="text-danger">*</span>
+                            </label>
+                            {{ form.lieu_naissance }}
+                            {% if form.lieu_naissance.errors %}
+                                <div class="text-danger small">{{ form.lieu_naissance.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.sexe.id_for_label }}" class="form-label">
+                                Sexe <span class="text-danger">*</span>
+                            </label>
+                            {{ form.sexe }}
+                            {% if form.sexe.errors %}
+                                <div class="text-danger small">{{ form.sexe.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.nationalite.id_for_label }}" class="form-label">
+                                Nationalité
+                            </label>
+                            {{ form.nationalite }}
+                            {% if form.nationalite.errors %}
+                                <div class="text-danger small">{{ form.nationalite.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.photo.id_for_label }}" class="form-label">
+                                Photo
+                            </label>
+                            {{ form.photo }}
+                            {% if form.photo.errors %}
+                                <div class="text-danger small">{{ form.photo.errors.0 }}</div>
+                            {% endif %}
+                            {% if object and object.photo %}
+                                <div class="mt-2">
+                                    <img src="{{ object.photo.url }}" alt="Photo actuelle" class="img-thumbnail" style="max-width: 100px;">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations scolaires -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0">
+                        <i class="fas fa-school me-2"></i>
+                        Informations scolaires
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.numero_etudiant.id_for_label }}" class="form-label">
+                                Numéro étudiant <span class="text-danger">*</span>
+                            </label>
+                            {{ form.numero_etudiant }}
+                            {% if form.numero_etudiant.errors %}
+                                <div class="text-danger small">{{ form.numero_etudiant.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.classe.id_for_label }}" class="form-label">
+                                Classe <span class="text-danger">*</span>
+                            </label>
+                            {{ form.classe }}
+                            {% if form.classe.errors %}
+                                <div class="text-danger small">{{ form.classe.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% if object %}
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.statut.id_for_label }}" class="form-label">
+                                Statut
+                            </label>
+                            <div class="form-check">
+                                {{ form.statut }}
+                                <label class="form-check-label" for="{{ form.statut.id_for_label }}">
+                                    Élève actif
+                                </label>
+                            </div>
+                            {% if form.statut.errors %}
+                                <div class="text-danger small">{{ form.statut.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations de contact -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="m-0">
+                <i class="fas fa-address-card me-2"></i>
+                Informations de contact
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="{{ form.adresse.id_for_label }}" class="form-label">
+                        Adresse <span class="text-danger">*</span>
+                    </label>
+                    {{ form.adresse }}
+                    {% if form.adresse.errors %}
+                        <div class="text-danger small">{{ form.adresse.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.telephone.id_for_label }}" class="form-label">
+                        Téléphone
+                    </label>
+                    {{ form.telephone }}
+                    {% if form.telephone.errors %}
+                        <div class="text-danger small">{{ form.telephone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">
+                        Email
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations des parents -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="m-0">
+                <i class="fas fa-users me-2"></i>
+                Informations des parents/tuteurs
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h6 class="text-primary mb-3">Père</h6>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.nom_pere.id_for_label }}" class="form-label">
+                                Nom du père
+                            </label>
+                            {{ form.nom_pere }}
+                            {% if form.nom_pere.errors %}
+                                <div class="text-danger small">{{ form.nom_pere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.telephone_pere.id_for_label }}" class="form-label">
+                                Téléphone du père
+                            </label>
+                            {{ form.telephone_pere }}
+                            {% if form.telephone_pere.errors %}
+                                <div class="text-danger small">{{ form.telephone_pere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.profession_pere.id_for_label }}" class="form-label">
+                                Profession du père
+                            </label>
+                            {{ form.profession_pere }}
+                            {% if form.profession_pere.errors %}
+                                <div class="text-danger small">{{ form.profession_pere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="text-primary mb-3">Mère</h6>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.nom_mere.id_for_label }}" class="form-label">
+                                Nom de la mère
+                            </label>
+                            {{ form.nom_mere }}
+                            {% if form.nom_mere.errors %}
+                                <div class="text-danger small">{{ form.nom_mere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.telephone_mere.id_for_label }}" class="form-label">
+                                Téléphone de la mère
+                            </label>
+                            {{ form.telephone_mere }}
+                            {% if form.telephone_mere.errors %}
+                                <div class="text-danger small">{{ form.telephone_mere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.profession_mere.id_for_label }}" class="form-label">
+                                Profession de la mère
+                            </label>
+                            {{ form.profession_mere }}
+                            {% if form.profession_mere.errors %}
+                                <div class="text-danger small">{{ form.profession_mere.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'school_management:eleve_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>
+                    Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if object %}Modifier{% else %}Ajouter{% endif %} l'élève
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-génération du numéro étudiant si vide
+    document.addEventListener('DOMContentLoaded', function() {
+        const numeroInput = document.getElementById('{{ form.numero_etudiant.id_for_label }}');
+        
+        if (numeroInput && !numeroInput.value) {
+            // Générer un numéro basé sur l'année et un nombre aléatoire
+            const year = new Date().getFullYear();
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            numeroInput.value = year + random;
+        }
+    });
+</script>
+{% endblock %}
+

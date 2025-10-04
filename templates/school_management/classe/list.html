@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des classes - Gestion École{% endblock %}
+
+{% block page_title %}Gestion des classes{% endblock %}
+
+{% block page_actions %}
+{% if is_admin %}
+<a href="{% url 'school_management:classe_create' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i>
+    Ajouter une classe
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Liste des classes -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0">
+            <i class="fas fa-users me-2"></i>
+            Liste des classes
+            {% if classes %}
+                <span class="badge bg-primary ms-2">{{ classes|length }}</span>
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if classes %}
+            <div class="row">
+                {% for classe in classes %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="m-0">{{ classe.nom }}</h6>
+                                <span class="badge bg-light text-dark">{{ classe.niveau }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <div class="border-end">
+                                        <h4 class="text-primary mb-0">{{ classe.nb_eleves }}</h4>
+                                        <small class="text-muted">Élèves</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-success mb-0">{{ classe.effectif_max }}</h4>
+                                    <small class="text-muted">Capacité max</small>
+                                </div>
+                            </div>
+
+                            <!-- Barre de progression de l'effectif -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Effectif</small>
+                                    <small class="text-muted">
+                                        {% widthratio classe.nb_eleves classe.effectif_max 100 %}%
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    {% widthratio classe.nb_eleves classe.effectif_max 100 as percentage %}
+                                    <div class="progress-bar 
+                                        {% if percentage < 50 %}bg-success
+                                        {% elif percentage < 80 %}bg-warning
+                                        {% else %}bg-danger{% endif %}"
+                                         style="width: {{ percentage }}%">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Année scolaire : {{ classe.annee_scolaire }}
+                                </small>
+                            </div>
+
+                            <!-- Professeurs de la classe -->
+                            <div class="mb-3">
+                                <small class="text-muted d-block mb-1">Professeurs :</small>
+                                {% for professeur in classe.professeurs.all|slice:":3" %}
+                                    <span class="badge bg-info me-1">{{ professeur.civilite }} {{ professeur.user.last_name }}</span>
+                                {% empty %}
+                                    <span class="text-muted small">Aucun professeur assigné</span>
+                                {% endfor %}
+                                {% if classe.professeurs.count > 3 %}
+                                    <span class="badge bg-secondary">+{{ classe.professeurs.count|add:"-3" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{% url 'school_management:classe_detail' classe.pk %}" 
+                                   class="btn btn-outline-info btn-sm" 
+                                   title="Voir les détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if is_admin %}
+                                <a href="{% url 'school_management:classe_update' classe.pk %}" 
+                                   class="btn btn-outline-warning btn-sm" 
+                                   title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'school_management:rapport_classe' classe.pk %}" 
+                                   class="btn btn-outline-success btn-sm" 
+                                   title="Rapport">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                                {% if is_admin %}
+                                <a href="{% url 'school_management:classe_delete' classe.pk %}" 
+                                   class="btn btn-outline-danger btn-sm" 
+                                   title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune classe créée</h5>
+                <p class="text-muted">Commencez par créer des classes pour organiser vos élèves.</p>
+                <a href="{% url 'school_management:classe_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Créer la première classe
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+{% if classes %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ classes|length }}</h4>
+                <small>Classes totales</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>
+                    {% if classes.0.annee_scolaire %}{{ classes.0.annee_scolaire }}{% else %}2024-2025{% endif %}
+                </h4>
+                <small>Année scolaire</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4><i class="fas fa-graduation-cap"></i></h4>
+                <small>Système actif</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation des cartes
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

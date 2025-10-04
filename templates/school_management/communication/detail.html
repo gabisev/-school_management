@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ communication.titre }} - Communication{% endblock %}
+
+{% block page_title %}{{ communication.titre }}{% endblock %}
+
+{% block page_actions %}
+{% if is_admin or is_professeur %}
+    {% if is_admin or communication.auteur == user %}
+        <a href="{% url 'school_management:communication_update' communication.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i>Modifier
+        </a>
+        <a href="{% url 'school_management:communication_delete' communication.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash me-1"></i>Supprimer
+        </a>
+    {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Contenu principal -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bullhorn me-2"></i>Communication
+                    </h6>
+                    <div>
+                        <span class="badge bg-{{ communication.get_type_color }} fs-6 me-2">
+                            {{ communication.get_type_communication_display }}
+                        </span>
+                        <span class="badge bg-{{ communication.get_priorite_color }}">
+                            <i class="fas fa-flag me-1"></i>{{ communication.get_priorite_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <h4 class="mb-3">{{ communication.titre }}</h4>
+                
+                <div class="communication-content">
+                    {{ communication.contenu|linebreaks }}
+                </div>
+                
+                {% if communication.piece_jointe %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6><i class="fas fa-paperclip me-2"></i>Pièce jointe</h6>
+                        <a href="{{ communication.piece_jointe.url }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-download me-1"></i>Télécharger le fichier
+                        </a>
+                        <small class="text-muted d-block mt-1">
+                            Fichier: {{ communication.piece_jointe.name|slice:"15:" }}
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Auteur :</strong><br>
+                    <div class="d-flex align-items-center mt-1">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                             style="width: 30px; height: 30px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <span>{{ communication.auteur.get_full_name }}</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Destinataires :</strong><br>
+                    <span class="badge bg-info mt-1">
+                        <i class="fas fa-users me-1"></i>{{ communication.get_destinataires_display_custom }}
+                    </span>
+                    {% if communication.classe_cible %}
+                        <br>
+                        <small class="text-muted">Classe: {{ communication.classe_cible.nom }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Date de création :</strong><br>
+                    <i class="fas fa-calendar me-1"></i>{{ communication.date_creation|date:"d/m/Y à H:i" }}
+                </div>
+                
+                {% if communication.date_publication %}
+                    <div class="mb-3">
+                        <strong>Date de publication :</strong><br>
+                        <i class="fas fa-calendar-check me-1"></i>{{ communication.date_publication|date:"d/m/Y à H:i" }}
+                    </div>
+                {% endif %}
+                
+                {% if communication.date_expiration %}
+                    <div class="mb-3">
+                        <strong>Date d'expiration :</strong><br>
+                        <i class="fas fa-calendar-times me-1"></i>{{ communication.date_expiration|date:"d/m/Y à H:i" }}
+                    </div>
+                {% endif %}
+                
+                {% if communication.date_modification != communication.date_creation %}
+                    <div class="mb-3">
+                        <strong>Dernière modification :</strong><br>
+                        <i class="fas fa-edit me-1"></i>{{ communication.date_modification|date:"d/m/Y à H:i" }}
+                    </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <strong>Statut :</strong><br>
+                    {% if communication.is_publiee %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Publiée
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-clock me-1"></i>Non publiée
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Actions rapides
+                </h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'school_management:communication_list' %}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                    <i class="fas fa-list me-1"></i>Retour à la liste
+                </a>
+                
+                {% if communication.piece_jointe %}
+                    <a href="{{ communication.piece_jointe.url }}" class="btn btn-outline-primary btn-sm w-100 mb-2" target="_blank">
+                        <i class="fas fa-download me-1"></i>Télécharger
+                    </a>
+                {% endif %}
+                
+                {% if is_admin or is_professeur %}
+                    {% if is_admin or communication.auteur == user %}
+                        <a href="{% url 'school_management:communication_update' communication.pk %}" class="btn btn-outline-warning btn-sm w-100 mb-2">
+                            <i class="fas fa-edit me-1"></i>Modifier
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

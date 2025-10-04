@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'Emploi du Temps{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .delete-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .warning-section {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 5px solid #ffc107;
+    }
+    .info-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: bold;
+        display: inline-block;
+        margin: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-trash me-2"></i>Supprimer l'Emploi du Temps</h2>
+                    <p class="text-muted">Confirmez la suppression de cet emploi du temps</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:emploi_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Avertissement -->
+            <div class="warning-section">
+                <h5 class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Attention : Action irréversible
+                </h5>
+                <p class="mb-0">
+                    Vous êtes sur le point de supprimer définitivement cet emploi du temps. 
+                    Cette action ne peut pas être annulée.
+                </p>
+            </div>
+
+            <!-- Informations de l'emploi du temps -->
+            <div class="card delete-card">
+                <div class="card-header delete-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-week me-2"></i>
+                        Emploi du temps à supprimer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Classe</label>
+                                <div class="info-badge">{{ object.classe.nom }} ({{ object.classe.niveau }})</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Matière</label>
+                                <div class="info-badge">{{ object.matiere.nom }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Professeur</label>
+                                <div class="info-badge">{{ object.professeur.nom_complet }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Salle</label>
+                                <div class="info-badge">
+                                    <i class="fas fa-door-open me-2"></i>{{ object.salle.nom }} ({{ object.salle.numero }})
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Créneau</label>
+                                <div class="info-badge">
+                                    <i class="fas fa-clock me-2"></i>
+                                    {{ object.creneau.get_jour_display }} 
+                                    {{ object.creneau.heure_debut|time:"H:i" }}-{{ object.creneau.heure_fin|time:"H:i" }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type de cours</label>
+                                <div class="info-badge">{{ object.get_type_cours_display }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Année scolaire</label>
+                                <div class="info-badge">{{ object.annee_scolaire }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Semestre</label>
+                                <div class="info-badge">Semestre {{ object.semestre }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if object.commentaire %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Commentaire</label>
+                            <div class="alert alert-info">{{ object.commentaire }}</div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Vérification des conflits -->
+                    {% if object.a_des_conflits %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Conflits détectés</h6>
+                            <p class="mb-0">Cet emploi du temps présente des conflits avec d'autres créneaux.</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-check-circle me-2"></i>Aucun conflit</h6>
+                            <p class="mb-0">Cet emploi du temps ne présente aucun conflit.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Formulaire de confirmation -->
+            <div class="card delete-card mt-4">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <h5 class="text-danger mb-3">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Êtes-vous sûr de vouloir supprimer cet emploi du temps ?
+                            </h5>
+                            <p class="text-muted mb-4">
+                                Cette action supprimera définitivement l'emploi du temps et toutes les données associées.
+                            </p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'school_management:emploi_list' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-danger btn-lg" id="confirm-delete">
+                                    <i class="fas fa-trash me-2"></i>Oui, supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="card delete-card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations sur la suppression
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ce qui sera supprimé :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-danger me-2"></i>L'emploi du temps</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les informations de planning</li>
+                                <li><i class="fas fa-check text-danger me-2"></i>Les commentaires associés</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Ce qui ne sera PAS supprimé :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-success me-2"></i>La classe</li>
+                                <li><i class="fas fa-times text-success me-2"></i>La matière</li>
+                                <li><i class="fas fa-times text-success me-2"></i>Le professeur</li>
+                                <li><i class="fas fa-times text-success me-2"></i>La salle</li>
+                                <li><i class="fas fa-times text-success me-2"></i>Le créneau</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    
+    // Confirmation supplémentaire
+    confirmDeleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Êtes-vous ABSOLUMENT sûr de vouloir supprimer cet emploi du temps ?\n\nCette action est irréversible !')) {
+            // Afficher un loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+            this.disabled = true;
+            
+            // Soumettre le formulaire
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
+
+

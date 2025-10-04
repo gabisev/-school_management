@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ professeur.nom_complet }} - Gestion École{% endblock %}
+
+{% block page_title %}Profil du professeur{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:professeur_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+<a href="{% url 'school_management:professeur_update' professeur.pk %}" class="btn btn-warning">
+    <i class="fas fa-edit me-1"></i>
+    Modifier
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations personnelles -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0">
+                    <i class="fas fa-user me-2"></i>
+                    Informations personnelles
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                {% if professeur.photo %}
+                    <img src="{{ professeur.photo.url }}" 
+                         alt="{{ professeur.nom_complet }}" 
+                         class="rounded-circle mb-3"
+                         style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 120px; height: 120px;">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-white"></i>
+                    </div>
+                {% endif %}
+                
+                <h4>{{ professeur.civilite }} {{ professeur.user.last_name }}</h4>
+                <p class="text-muted">{{ professeur.user.first_name }}</p>
+                
+                <!-- Statut de professeur principal -->
+                {% if professeur.classes_principales.exists %}
+                    <div class="alert alert-success mt-3 mb-3">
+                        <i class="fas fa-crown me-2"></i>
+                        <strong>Professeur Principal</strong>
+                        <div class="mt-2">
+                            {% for classe in professeur.classes_principales.all %}
+                                <span class="badge bg-success me-1">{{ classe.nom }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="row text-start mt-4">
+                    <div class="col-12 mb-2">
+                        <strong>Nom d'utilisateur:</strong><br>
+                        <code>{{ professeur.user.username }}</code>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Email:</strong><br>
+                        {% if professeur.user.email %}
+                            <a href="mailto:{{ professeur.user.email }}">{{ professeur.user.email }}</a>
+                        {% else %}
+                            Non renseigné
+                        {% endif %}
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Téléphone:</strong><br>
+                        {{ professeur.telephone|default:"Non renseigné" }}
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Date d'embauche:</strong><br>
+                        {{ professeur.date_embauche|date:"d/m/Y" }}
+                    </div>
+                    <div class="col-12">
+                        <strong>Civilité:</strong><br>
+                        {{ professeur.get_civilite_display }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations professionnelles -->
+    <div class="col-lg-8">
+        <!-- Adresse -->
+        {% if professeur.adresse %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="m-0">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Adresse
+                </h6>
+            </div>
+            <div class="card-body">
+                {{ professeur.adresse }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Matières enseignées -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-book me-2"></i>
+                    Matières enseignées
+                </h6>
+                <span class="badge bg-primary">{{ professeur.matieres.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if professeur.matieres.all %}
+                    <div class="row">
+                        {% for matiere in professeur.matieres.all %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-left-info">
+                                    <div class="card-body py-2">
+                                        <h6 class="text-info">{{ matiere.nom }}</h6>
+                                        <p class="text-muted small mb-1">
+                                            <strong>Code:</strong> {{ matiere.code }}
+                                        </p>
+                                        <p class="text-muted small mb-1">
+                                            <strong>Coefficient:</strong> {{ matiere.coefficient }}
+                                        </p>
+                                        {% if matiere.description %}
+                                            <p class="text-muted small mb-0">{{ matiere.description|truncatechars:100 }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-book fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucune matière assignée</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Classes assignées -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0">
+                    <i class="fas fa-users me-2"></i>
+                    Classes assignées
+                </h6>
+                <span class="badge bg-primary">{{ professeur.classes.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if professeur.classes.all %}
+                    <div class="row">
+                        {% for classe in professeur.classes.all %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card {% if classe in professeur.classes_principales.all %}border-left-warning{% else %}border-left-success{% endif %}">
+                                    <div class="card-body py-2">
+                                        <h6 class="{% if classe in professeur.classes_principales.all %}text-warning{% else %}text-success{% endif %}">
+                                            {% if classe in professeur.classes_principales.all %}
+                                                <i class="fas fa-crown me-1"></i>
+                                            {% endif %}
+                                            {{ classe.nom }}
+                                            {% if classe in professeur.classes_principales.all %}
+                                                <span class="badge bg-warning ms-1">Principal</span>
+                                            {% endif %}
+                                        </h6>
+                                        <p class="text-muted small mb-1">
+                                            <strong>Niveau:</strong> {{ classe.niveau }}
+                                        </p>
+                                        <p class="text-muted small mb-1">
+                                            <strong>Effectif:</strong> {{ classe.effectif_actuel }}/{{ classe.effectif_max }}
+                                        </p>
+                                        <p class="text-muted small mb-0">
+                                            <strong>Année:</strong> {{ classe.annee_scolaire }}
+                                        </p>
+                                        <a href="{% url 'school_management:classe_detail' classe.pk %}" class="btn btn-sm btn-outline-success mt-2">
+                                            Voir la classe
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucune classe assignée</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Évaluations récentes -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0">
+            <i class="fas fa-clipboard-check me-2"></i>
+            Évaluations récentes
+        </h6>
+        <a href="{% url 'school_management:evaluation_list' %}?professeur={{ professeur.pk }}" class="btn btn-sm btn-primary">
+            Voir toutes
+        </a>
+    </div>
+    <div class="card-body">
+        {% if professeur.evaluations.all %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Matière</th>
+                            <th>Classe</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evaluation in professeur.evaluations.all|slice:":5" %}
+                        <tr>
+                            <td>{{ evaluation.titre }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ evaluation.matiere.nom }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ evaluation.classe.nom }}</span>
+                            </td>
+                            <td>{{ evaluation.date_evaluation|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ evaluation.get_type_evaluation_display }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" 
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-3">
+                <i class="fas fa-clipboard-check fa-2x text-muted mb-2"></i>
+                <p class="text-muted">Aucune évaluation créée</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

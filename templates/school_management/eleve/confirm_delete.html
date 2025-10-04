@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ object.nom_complet }} - Gestion École{% endblock %}
+
+{% block page_title %}Supprimer l'élève{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'school_management:eleve_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>
+    Retour à la liste
+</a>
+<a href="{% url 'school_management:eleve_detail' object.pk %}" class="btn btn-info">
+    <i class="fas fa-eye me-1"></i>
+    Voir le profil
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="m-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmation de suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>Attention !</strong> Cette action est irréversible. Toutes les données associées à cet élève seront également supprimées.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        {% if object.photo %}
+                            <img src="{{ object.photo.url }}" 
+                                 alt="{{ object.nom_complet }}" 
+                                 class="rounded-circle mb-3"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3"
+                                 style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                        {% endif %}
+                        <h5>{{ object.nom_complet }}</h5>
+                        <p class="text-muted">{{ object.age }} ans</p>
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Informations de l'élève à supprimer :</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Numéro étudiant :</strong> {{ object.numero_etudiant }}</li>
+                            <li><strong>Classe :</strong> {{ object.classe.nom }} ({{ object.classe.niveau }})</li>
+                            <li><strong>Date de naissance :</strong> {{ object.date_naissance|date:"d/m/Y" }}</li>
+                            <li><strong>Date d'inscription :</strong> {{ object.date_inscription|date:"d/m/Y" }}</li>
+                        </ul>
+
+                        <h6 class="mt-4 text-danger">Données qui seront supprimées :</h6>
+                        <ul class="text-danger">
+                            <li>Toutes les notes de l'élève</li>
+                            <li>Toutes les absences enregistrées</li>
+                            <li>L'historique scolaire complet</li>
+                            <li>Les informations personnelles et de contact</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'school_management:eleve_detail' object.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-1"></i>
+                            Oui, supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Confirmation avant suppression
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(e) {
+            const confirmation = confirm(
+                'Êtes-vous absolument certain de vouloir supprimer cet élève ?\n\n' +
+                'Cette action supprimera définitivement :\n' +
+                '- L\'élève {{ object.nom_complet }}\n' +
+                '- Toutes ses notes\n' +
+                '- Toutes ses absences\n' +
+                '- Son historique complet\n\n' +
+                'Cette action ne peut pas être annulée !'
+            );
+            
+            if (!confirmation) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
+

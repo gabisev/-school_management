@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - Gestion École{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
+                            Élèves actifs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_eleves }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-graduate fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
+                            Professeurs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_professeurs }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
+                            Classes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_classes }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-white text-uppercase mb-1">
+                            Matières
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-white">{{ total_matieres }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Évaluations récentes -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Évaluations récentes
+                </h6>
+                <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-sm btn-primary">
+                    Voir tout
+                </a>
+            </div>
+            <div class="card-body">
+                {% if evaluations_recentes %}
+                    <div class="list-group list-group-flush">
+                        {% for evaluation in evaluations_recentes %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ evaluation.titre }}</div>
+                                    <small class="text-muted">
+                                        {{ evaluation.matiere.nom }} - {{ evaluation.classe.nom }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">
+                                    {{ evaluation.date_evaluation|date:"d/m" }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-calendar-alt fa-2x d-block mb-2"></i>
+                        Aucune évaluation récente
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Classes et effectifs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-users me-2"></i>
+                    Effectifs par classe
+                </h6>
+                <a href="{% url 'school_management:classe_list' %}" class="btn btn-sm btn-primary">
+                    Gérer
+                </a>
+            </div>
+            <div class="card-body">
+                {% if classes_list %}
+                    {% for classe in classes_list %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <strong>{{ classe.nom }}</strong>
+                                <small class="text-muted d-block">{{ classe.niveau }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-info">{{ classe.nb_eleves }}/{{ classe.effectif_max }}</span>
+                                <div class="progress mt-1" style="width: 100px; height: 4px;">
+                                    <div class="progress-bar" 
+                                         style="width: {% widthratio classe.nb_eleves classe.effectif_max 100 %}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                        Aucune classe créée
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertes et notifications -->
+{% if absences_non_justifiees > 0 %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Attention :</strong> Il y a {{ absences_non_justifiees }} absence(s) non justifiée(s).
+            <a href="{% url 'school_management:absence_list' %}" class="alert-link">Voir les absences</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions rapides -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-bolt me-2"></i>
+                    Actions rapides
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'school_management:eleve_create' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-user-plus d-block mb-2"></i>
+                            Ajouter un élève
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'school_management:professeur_create' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-chalkboard-teacher d-block mb-2"></i>
+                            Ajouter un professeur
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'school_management:evaluation_create' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-clipboard-check d-block mb-2"></i>
+                            Créer une évaluation
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'school_management:rapports' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-chart-bar d-block mb-2"></i>
+                            Voir les rapports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation pour les cartes de statistiques
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.stats-card');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.5s ease';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

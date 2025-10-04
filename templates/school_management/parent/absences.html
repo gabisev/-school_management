@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Absences de mes enfants{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Absences de mes enfants
+        </h1>
+        <div>
+            <a href="{% url 'school_management:parent_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filtres
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="eleve" class="form-label">Enfant</label>
+                    <select name="eleve" id="eleve" class="form-select">
+                        <option value="">Tous les enfants</option>
+                        {% for enfant in enfants %}
+                            <option value="{{ enfant.id }}" {% if selected_eleve == enfant.id|stringformat:"s" %}selected{% endif %}>
+                                {{ enfant.user.get_full_name|default:enfant.user.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="justifiee" class="form-label">Statut</label>
+                    <select name="justifiee" id="justifiee" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="true" {% if selected_justifiee == "true" %}selected{% endif %}>Justifiées</option>
+                        <option value="false" {% if selected_justifiee == "false" %}selected{% endif %}>Non justifiées</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i> Filtrer
+                    </button>
+                    <a href="{% url 'school_management:parent_absences' %}" class="btn btn-secondary">
+                        <i class="fas fa-sync-alt me-1"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des absences -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>Liste des Absences
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if absences %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Enfant</th>
+                                <th>Date de début</th>
+                                <th>Date de fin</th>
+                                <th>Durée</th>
+                                <th>Motif</th>
+                                <th>Statut</th>
+                                <th>Commentaire</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for absence in absences %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if absence.eleve.photo %}
+                                                <img src="{{ absence.eleve.photo.url }}" class="rounded-circle me-2" width="30" height="30" alt="{{ absence.eleve.user.get_full_name }}">
+                                            {% else %}
+                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                                    <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ absence.eleve.user.get_full_name|default:absence.eleve.user.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ absence.eleve.classe.nom }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ absence.date_debut|date:"d/m/Y" }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ absence.date_debut|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ absence.date_fin|date:"d/m/Y" }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ absence.date_fin|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {% if absence.date_debut.date == absence.date_fin.date %}
+                                                Journée complète
+                                            {% else %}
+                                                {{ absence.date_fin|timeuntil:absence.date_debut }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if absence.motif == 'M' %}danger{% elif absence.motif == 'F' %}warning{% elif absence.motif == 'A' %}secondary{% else %}dark{% endif %}">
+                                            {{ absence.get_motif_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if absence.justifiee %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Justifiée
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Non justifiée
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if absence.commentaire %}
+                                            <span class="text-muted" title="{{ absence.commentaire }}">
+                                                {{ absence.commentaire|truncatechars:30 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_justifiee %}&justifiee={{ selected_justifiee }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i> Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for i in page_obj.paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ i }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_justifiee %}&justifiee={{ selected_justifiee }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_eleve %}&eleve={{ selected_eleve }}{% endif %}{% if selected_justifiee %}&justifiee={{ selected_justifiee }}{% endif %}">
+                                        Suivant <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-exclamation-triangle fa-4x mb-3"></i>
+                    <h4>Aucune absence trouvée</h4>
+                    <p>Il n'y a pas d'absences correspondant à vos critères de recherche.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistiques Détaillées{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Statistiques Détaillées
+                    </h2>
+                    <p class="text-muted mb-0">Analyse approfondie des performances scolaires</p>
+                </div>
+                <a href="{% url 'school_management:admin_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+
+            <!-- Résumé général -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ total_classes }}</h4>
+                                    <p class="mb-0">Classes</p>
+                                </div>
+                                <i class="fas fa-school fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ total_eleves }}</h4>
+                                    <p class="mb-0">Élèves</p>
+                                </div>
+                                <i class="fas fa-user-graduate fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ total_bulletins }}</h4>
+                                    <p class="mb-0">Bulletins</p>
+                                </div>
+                                <i class="fas fa-file-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ bulletins_valides }}</h4>
+                                    <p class="mb-0">Validés</p>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques par classe -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Statistiques par Classe
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Classe</th>
+                                    <th>Professeur Principal</th>
+                                    <th>Effectif</th>
+                                    <th>Bulletins</th>
+                                    <th>Validés</th>
+                                    <th>Moyenne Classe</th>
+                                    <th>Excellent (≥16)</th>
+                                    <th>Bien (14-16)</th>
+                                    <th>Assez Bien (12-14)</th>
+                                    <th>Passable (10-12)</th>
+                                    <th>Insuffisant (<10)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in classes_detailed %}
+                                    <tr>
+                                        <td class="fw-bold">{{ stat.classe.nom }}</td>
+                                        <td>
+                                            {% if stat.prof_principal %}
+                                                {{ stat.prof_principal.nom_complet }}
+                                            {% else %}
+                                                <span class="text-muted">Non assigné</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ stat.eleves_count }}</span>
+                                        </td>
+                                        <td class="text-center">{{ stat.bulletins_count }}</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">{{ stat.bulletins_valides }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.moyenne_classe > 0 %}
+                                                <span class="badge bg-{% if stat.moyenne_classe >= 14 %}success{% elif stat.moyenne_classe >= 12 %}info{% elif stat.moyenne_classe >= 10 %}warning{% else %}danger{% endif %}">
+                                                    {{ stat.moyenne_classe }}/20
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">--</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.excellent > 0 %}
+                                                <span class="badge bg-success">{{ stat.excellent }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.bien > 0 %}
+                                                <span class="badge bg-info">{{ stat.bien }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.assez_bien > 0 %}
+                                                <span class="badge bg-primary">{{ stat.assez_bien }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.passable > 0 %}
+                                                <span class="badge bg-warning">{{ stat.passable }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if stat.insuffisant > 0 %}
+                                                <span class="badge bg-danger">{{ stat.insuffisant }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphiques de répartition -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-pie-chart me-2"></i>
+                                Répartition des Niveaux
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="niveauChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-bar-chart me-2"></i>
+                                Moyennes par Classe
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="moyenneChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Graphique de répartition des niveaux
+const niveauCtx = document.getElementById('niveauChart').getContext('2d');
+const niveauChart = new Chart(niveauCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Excellent (≥16)', 'Bien (14-16)', 'Assez Bien (12-14)', 'Passable (10-12)', 'Insuffisant (<10)'],
+        datasets: [{
+            data: [
+                {% for stat in classes_detailed %}{{ stat.excellent }}{% if not forloop.last %},{% endif %}{% endfor %},
+                {% for stat in classes_detailed %}{{ stat.bien }}{% if not forloop.last %},{% endif %}{% endfor %},
+                {% for stat in classes_detailed %}{{ stat.assez_bien }}{% if not forloop.last %},{% endif %}{% endfor %},
+                {% for stat in classes_detailed %}{{ stat.passable }}{% if not forloop.last %},{% endif %}{% endfor %},
+                {% for stat in classes_detailed %}{{ stat.insuffisant }}{% if not forloop.last %},{% endif %}{% endfor %}
+            ],
+            backgroundColor: [
+                '#28a745',
+                '#17a2b8',
+                '#007bff',
+                '#ffc107',
+                '#dc3545'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Graphique des moyennes par classe
+const moyenneCtx = document.getElementById('moyenneChart').getContext('2d');
+const moyenneChart = new Chart(moyenneCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for stat in classes_detailed %}'{{ stat.classe.nom }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Moyenne de classe',
+            data: [{% for stat in classes_detailed %}{{ stat.moyenne_classe|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                {% for stat in classes_detailed %}
+                    {% if stat.moyenne_classe >= 14 %}'#28a745'
+                    {% elif stat.moyenne_classe >= 12 %}'#17a2b8'
+                    {% elif stat.moyenne_classe >= 10 %}'#ffc107'
+                    {% else %}'#dc3545'
+                    {% endif %}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 20
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
+
+
+
+
+
+

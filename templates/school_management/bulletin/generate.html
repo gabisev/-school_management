@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Bulletin de {{ eleve.nom }} {{ eleve.prenom }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-file-alt text-primary me-2"></i>
+                    Bulletin de {{ eleve.nom }} {{ eleve.prenom }}
+                </h1>
+                <div class="btn-group">
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-1"></i>Imprimer
+                    </button>
+                    <a href="{% url 'school_management:eleve_detail' eleve.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        BULLETIN DE NOTES - {{ eleve.classe.nom }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Informations de l'élève -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Informations de l'élève</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Nom complet :</strong></td>
+                                    <td>{{ eleve.nom }} {{ eleve.prenom }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Classe :</strong></td>
+                                    <td>{{ eleve.classe.nom }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Numéro :</strong></td>
+                                    <td>{{ eleve.numero_etudiant }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date de naissance :</strong></td>
+                                    <td>{{ eleve.date_naissance|date:"d/m/Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Période</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Année scolaire :</strong></td>
+                                    <td>{{ annee_scolaire }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date de génération :</strong></td>
+                                    <td>{{ "now"|date:"d/m/Y à H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total élèves :</strong></td>
+                                    <td>{{ total_eleves_classe }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Notes par matière -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-chart-line me-2"></i>Notes par matière
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Matière</th>
+                                            <th>Notes</th>
+                                            <th>Moyenne</th>
+                                            <th>Appréciation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for matiere, moyenne in moyennes_par_matiere.items %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ matiere.nom }}</strong>
+                                                    {% if matiere.coefficient > 1 %}
+                                                        <span class="badge bg-info ms-2">Coef. {{ matiere.coefficient }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% for note in notes %}
+                                                        {% if note.evaluation.matiere == matiere %}
+                                                            <span class="badge bg-secondary me-1">{{ note.note|floatformat:1 }}</span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{% if moyenne >= 16 %}success{% elif moyenne >= 14 %}primary{% elif moyenne >= 12 %}info{% elif moyenne >= 10 %}warning{% else %}danger{% endif %} fs-6">
+                                                        {{ moyenne|floatformat:2 }}/20
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if moyenne >= 16 %}
+                                                        <span class="text-success"><i class="fas fa-star me-1"></i>Excellent</span>
+                                                    {% elif moyenne >= 14 %}
+                                                        <span class="text-primary"><i class="fas fa-thumbs-up me-1"></i>Très bien</span>
+                                                    {% elif moyenne >= 12 %}
+                                                        <span class="text-info"><i class="fas fa-check me-1"></i>Bien</span>
+                                                    {% elif moyenne >= 10 %}
+                                                        <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Assez bien</span>
+                                                    {% else %}
+                                                        <span class="text-danger"><i class="fas fa-times me-1"></i>Insuffisant</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résultats généraux -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ moyenne_generale|floatformat:2 }}/20</h4>
+                                    <p class="card-text">Moyenne générale</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ moyenne_pourcentage|floatformat:1 }}%</h4>
+                                    <p class="card-text">Moyenne en %</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ rang }}{% if rang == 1 %}er{% else %}ème{% endif %}/{{ total_eleves_classe }}</h4>
+                                    <p class="card-text">Rang dans la classe</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">{{ moyenne_classe|floatformat:2 }}/20</h4>
+                                    <p class="card-text">Moyenne de la classe</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mention -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-{{ couleur_mention }}">
+                                <div class="card-header bg-{{ couleur_mention }} text-white">
+                                    <h6 class="mb-0">
+                                        <i class="{{ icone_mention }} me-2"></i>Mention
+                                    </h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <h2 class="text-{{ couleur_mention }} mb-3">
+                                        <i class="{{ icone_mention }} me-3"></i>{{ mention }}
+                                    </h2>
+                                    <p class="text-muted mb-0">
+                                        Moyenne générale : {{ moyenne_generale|floatformat:2 }}/20 ({{ moyenne_pourcentage|floatformat:1 }}%)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Décision de passage -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-{{ couleur_decision }}">
+                                <div class="card-header bg-{{ couleur_decision }} text-white">
+                                    <h6 class="mb-0">
+                                        <i class="{{ icone_decision }} me-2"></i>Décision de passage
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h4 class="text-{{ couleur_decision }}">
+                                                <i class="{{ icone_decision }} me-2"></i>{{ decision_passage }}
+                                            </h4>
+                                            {% if decision_passage == "REDOUBLE" %}
+                                                <p class="text-muted">
+                                                    La moyenne de {{ moyenne_pourcentage|floatformat:1 }}% est insuffisante pour passer en classe supérieure. 
+                                                    L'élève doit redoubler l'année.
+                                                </p>
+                                            {% elif decision_passage == "SECONDE SESSION" %}
+                                                <p class="text-muted">
+                                                    Moyenne de {{ moyenne_pourcentage|floatformat:1 }}% avec {{ echecs }} échec(s) sur {{ total_matieres }} matière(s). 
+                                                    L'élève doit passer une seconde session pour les matières en échec.
+                                                </p>
+                                            {% else %}
+                                                <p class="text-muted">
+                                                    Moyenne de {{ moyenne_pourcentage|floatformat:1 }}% avec {{ echecs }} échec(s) sur {{ total_matieres }} matière(s). 
+                                                    L'élève passe en classe supérieure.
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="progress mb-2" style="height: 20px;">
+                                                    <div class="progress-bar bg-{{ couleur_decision }}" role="progressbar" 
+                                                         style="width: {{ moyenne_pourcentage }}%" 
+                                                         aria-valuenow="{{ moyenne_pourcentage }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        {{ moyenne_pourcentage|floatformat:1 }}%
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    {% if echecs > 0 %}
+                                                        {{ echecs }} échec(s) sur {{ total_matieres }} matière(s)
+                                                    {% else %}
+                                                        Aucun échec
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appréciation générale -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0 text-primary">
+                                        <i class="fas fa-comment me-2"></i>Appréciation générale
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if moyenne_generale >= 16 %}
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-star me-2"></i>
+                                            <strong>Excellent travail !</strong> {{ eleve.nom }} {{ eleve.prenom }} démontre une excellente maîtrise des matières enseignées. 
+                                            Félicitations pour ces résultats remarquables !
+                                        </div>
+                                    {% elif moyenne_generale >= 14 %}
+                                        <div class="alert alert-primary">
+                                            <i class="fas fa-thumbs-up me-2"></i>
+                                            <strong>Très bon travail !</strong> {{ eleve.nom }} {{ eleve.prenom }} montre une très bonne compréhension des matières. 
+                                            Continuez sur cette lancée !
+                                        </div>
+                                    {% elif moyenne_generale >= 12 %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-check me-2"></i>
+                                            <strong>Bon travail !</strong> {{ eleve.nom }} {{ eleve.prenom }} progresse bien dans ses apprentissages. 
+                                            Quelques efforts supplémentaires permettront d'améliorer encore les résultats.
+                                        </div>
+                                    {% elif moyenne_generale >= 10 %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <strong>Résultats corrects.</strong> {{ eleve.nom }} {{ eleve.prenom }} doit redoubler d'efforts pour améliorer ses résultats. 
+                                            Un travail plus régulier est nécessaire.
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-danger">
+                                            <i class="fas fa-times me-2"></i>
+                                            <strong>Résultats insuffisants.</strong> {{ eleve.nom }} {{ eleve.prenom }} doit impérativement améliorer ses résultats. 
+                                            Un soutien scolaire et un travail plus assidu sont recommandés.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn-group, .d-flex .btn {
+        display: none !important;
+    }
+    .card {
+        border: 1px solid #000 !important;
+    }
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

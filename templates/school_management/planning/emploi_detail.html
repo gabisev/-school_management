@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Détails Emploi du Temps{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .info-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: bold;
+    }
+    .conflit-alert {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .success-alert {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-calendar-week me-2"></i>Détails de l'Emploi du Temps</h2>
+                    <p class="text-muted">{{ emploi.classe.nom }} - {{ emploi.matiere.nom }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:emploi_list' %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                    <a href="{% url 'school_management:emploi_update' emploi.pk %}" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    <a href="{% url 'school_management:emploi_delete' emploi.pk %}" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alerte de conflit -->
+            {% if emploi.a_des_conflits %}
+                <div class="conflit-alert">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Attention : Conflits détectés</h5>
+                    <p class="mb-0">Cet emploi du temps présente des conflits avec d'autres créneaux. Vérifiez les détails ci-dessous.</p>
+                </div>
+            {% else %}
+                <div class="success-alert">
+                    <h5><i class="fas fa-check-circle me-2"></i>Aucun conflit</h5>
+                    <p class="mb-0">Cet emploi du temps ne présente aucun conflit avec d'autres créneaux.</p>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Informations principales -->
+                <div class="col-md-8">
+                    <div class="card detail-card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations Principales</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Classe</label>
+                                        <div class="info-badge">{{ emploi.classe.nom }} ({{ emploi.classe.niveau }})</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Matière</label>
+                                        <div class="info-badge">{{ emploi.matiere.nom }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Professeur</label>
+                                        <div class="info-badge">{{ emploi.professeur.nom_complet }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Salle</label>
+                                        <div class="info-badge">
+                                            <i class="fas fa-door-open me-2"></i>{{ emploi.salle.nom }} ({{ emploi.salle.numero }})
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Type de cours</label>
+                                        <div class="info-badge">{{ emploi.get_type_cours_display }}</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Statut</label>
+                                        {% if emploi.actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactif</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Créneau horaire -->
+                    <div class="card detail-card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Créneau Horaire</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="h4 text-primary">{{ emploi.creneau.get_jour_display }}</div>
+                                    <small class="text-muted">Jour</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="h4 text-success">{{ emploi.creneau.heure_debut|time:"H:i" }}</div>
+                                    <small class="text-muted">Heure de début</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="h4 text-warning">{{ emploi.creneau.heure_fin|time:"H:i" }}</div>
+                                    <small class="text-muted">Heure de fin</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <div class="h5 text-info">{{ emploi.creneau.duree_minutes }} minutes</div>
+                                <small class="text-muted">Durée du cours</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commentaire -->
+                    {% if emploi.commentaire %}
+                        <div class="card detail-card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-comment me-2"></i>Commentaire</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">{{ emploi.commentaire }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Informations secondaires -->
+                <div class="col-md-4">
+                    <!-- Période -->
+                    <div class="card detail-card mb-4">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Période</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Année scolaire</label>
+                                <div class="info-badge">{{ emploi.annee_scolaire }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Semestre</label>
+                                <div class="info-badge">Semestre {{ emploi.semestre }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations sur la salle -->
+                    <div class="card detail-card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-door-open me-2"></i>Informations Salle</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type</label>
+                                <div class="info-badge">{{ emploi.salle.get_type_salle_display }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Capacité</label>
+                                <div class="info-badge">{{ emploi.salle.capacite }} places</div>
+                            </div>
+                            {% if emploi.salle.equipements %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Équipements</label>
+                                    <div class="small">{{ emploi.salle.equipements }}</div>
+                                </div>
+                            {% endif %}
+                            {% if emploi.salle.accessible_handicap %}
+                                <div class="mb-3">
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-wheelchair me-1"></i>Accessible handicap
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Détection de conflits -->
+                    <div class="card detail-card mb-4">
+                        <div class="card-header {% if emploi.a_des_conflits %}bg-danger{% else %}bg-success{% endif %} text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-{% if emploi.a_des_conflits %}exclamation-triangle{% else %}check-circle{% endif %} me-2"></i>
+                                Vérification des Conflits
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if emploi.conflit_professeur %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-user-times me-2"></i>
+                                    <strong>Conflit professeur :</strong> Le professeur a déjà un cours à ce créneau.
+                                </div>
+                            {% endif %}
+                            
+                            {% if emploi.conflit_salle %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-door-closed me-2"></i>
+                                    <strong>Conflit salle :</strong> La salle est déjà occupée à ce créneau.
+                                </div>
+                            {% endif %}
+                            
+                            {% if emploi.conflit_classe %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-users me-2"></i>
+                                    <strong>Conflit classe :</strong> La classe a déjà un cours à ce créneau.
+                                </div>
+                            {% endif %}
+                            
+                            {% if not emploi.a_des_conflits %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Aucun conflit détecté.</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Métadonnées -->
+                    <div class="card detail-card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-info me-2"></i>Métadonnées</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <small class="text-muted">Créé le :</small><br>
+                                <strong>{{ emploi.date_creation|date:"d/m/Y à H:i" }}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Modifié le :</small><br>
+                                <strong>{{ emploi.date_modification|date:"d/m/Y à H:i" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulletin - Trimestre {{ bulletin.trimestre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête du bulletin -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="mb-1">
+                                <i class="fas fa-file-alt me-2"></i>
+                                Bulletin de Notes
+                            </h3>
+                            <p class="mb-0 opacity-75">
+                                Trimestre {{ bulletin.trimestre }} - {{ bulletin.annee_scolaire }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-{% if bulletin.statut == 'VALIDE' %}success{% elif bulletin.statut == 'EN_ATTENTE' %}warning{% else %}secondary{% endif %} fs-6">
+                                {{ bulletin.get_statut_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-user-graduate me-2"></i>
+                                Informations de l'élève
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold text-muted">Nom complet :</td>
+                                    <td>{{ bulletin.eleve.nom_complet }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Classe :</td>
+                                    <td>{{ bulletin.classe.nom }} ({{ bulletin.classe.niveau }})</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Effectif de la classe :</td>
+                                    <td>{{ bulletin.effectif_classe }} élèves</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Résultats
+                            </h5>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h3 class="mb-0 text-{% if bulletin.moyenne_generale >= 12 %}success{% elif bulletin.moyenne_generale >= 10 %}warning{% else %}danger{% endif %}">
+                                            {{ bulletin.moyenne_generale|default:"--" }}
+                                        </h3>
+                                        <small class="text-muted">Moyenne générale</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h3 class="mb-0 text-info">
+                                            {{ bulletin.rang|default:"--" }}{% if bulletin.rang %}/{{ bulletin.effectif_classe }}{% endif %}
+                                        </h3>
+                                        <small class="text-muted">Rang</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <h3 class="mb-0 text-secondary">
+                                        {{ bulletin.moyenne_classe|default:"--" }}
+                                    </h3>
+                                    <small class="text-muted">Moyenne classe</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes par matière -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>
+                        Notes par matière
+                    </h5>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if notes_detaillees %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0">Matière</th>
+                                        <th class="border-0 text-center">Coefficient</th>
+                                        <th class="border-0 text-center">Moyenne</th>
+                                        <th class="border-0">Appréciation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for note in notes_detaillees %}
+                                        <tr>
+                                            <td class="fw-bold">
+                                                <i class="fas fa-book text-primary me-2"></i>
+                                                {{ note.matiere.nom }}
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ note.coefficient }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-{% if note.moyenne_matiere >= 12 %}success{% elif note.moyenne_matiere >= 10 %}warning{% else %}danger{% endif %} fs-6">
+                                                    {{ note.moyenne_matiere }}/20
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if note.appreciation %}
+                                                    <small class="text-muted">{{ note.appreciation }}</small>
+                                                {% else %}
+                                                    <small class="text-muted fst-italic">Aucune appréciation</small>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                            <p class="text-muted mb-0">Aucune note disponible pour ce trimestre.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Appréciations -->
+            {% if bulletin.appreciation_generale or bulletin.appreciation_prof_principal %}
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>
+                            Appréciations
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if bulletin.appreciation_generale %}
+                            <div class="mb-4">
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-comment me-2"></i>
+                                    Appréciation générale
+                                </h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-0">{{ bulletin.appreciation_generale }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if bulletin.appreciation_prof_principal %}
+                            <div>
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    Appréciation du professeur principal
+                                </h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-0">{{ bulletin.appreciation_prof_principal }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Informations de validation -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations
+                    </h6>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-plus me-1"></i>
+                                Créé le {{ bulletin.date_creation|date:"d/m/Y à H:i" }}
+                            </small>
+                        </div>
+                        {% if bulletin.date_validation %}
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Validé le {{ bulletin.date_validation|date:"d/m/Y à H:i" }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center mt-4">
+                <a href="{% url 'school_management:bulletin_list' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour à la liste
+                </a>
+                
+                {% if is_eleve %}
+                    <a href="{% url 'school_management:eleve_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Tableau de bord
+                    </a>
+                {% elif is_parent %}
+                    <a href="{% url 'school_management:parent_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Tableau de bord
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

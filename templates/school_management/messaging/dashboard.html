@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Messagerie - Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-comments text-primary me-2"></i>
+                    Messagerie
+                </h1>
+                {% if user_type == 'professeur' or user_type == 'admin' %}
+                    <a href="{% url 'school_management:conversation_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Nouvelle conversation
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ conversations_count }}</h4>
+                            <p class="card-text">Conversations</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-comments fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ unread_messages_count }}</h4>
+                            <p class="card-text">Messages non lus</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ user_type|title }}</h4>
+                            <p class="card-text">Type d'utilisateur</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Actions rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-list me-1"></i>
+                                Toutes les conversations
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-plus me-1"></i>
+                                Nouvelle conversation
+                            </a>
+                        </div>
+                        {% if user_type == 'professeur' %}
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=PROF_PROF" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-chalkboard-teacher me-1"></i>
+                                Entre professeurs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=PROF_PARENT" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-users me-1"></i>
+                                Avec les parents
+                            </a>
+                        </div>
+                        {% elif user_type == 'eleve' %}
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=ELEVE_ELEVE" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-user-friends me-1"></i>
+                                Entre élèves
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=CLASSE_PROF" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-chalkboard me-1"></i>
+                                Avec ma classe
+                            </a>
+                        </div>
+                        {% elif user_type == 'parent' %}
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=PROF_PARENT" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-chalkboard-teacher me-1"></i>
+                                Avec les professeurs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'school_management:conversation_create' %}?type=CLASSE_PROF" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-chalkboard me-1"></i>
+                                Avec la classe
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversations récentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock text-info me-2"></i>
+                        Conversations récentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_conversations %}
+                        <div class="list-group">
+                            {% for conversation in recent_conversations %}
+                                <a href="{% url 'school_management:conversation_detail' conversation.pk %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ conversation.titre }}</h6>
+                                        <small class="text-muted">
+                                            {{ conversation.get_last_message.date_envoi|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <span class="badge bg-secondary me-2">{{ conversation.get_type_conversation_display }}</span>
+                                        {% if conversation.get_last_message %}
+                                            {{ conversation.get_last_message.contenu|truncatechars:100 }}
+                                        {% else %}
+                                            <em class="text-muted">Aucun message</em>
+                                        {% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1"></i>
+                                        {{ conversation.get_participants.count }} participant(s)
+                                    </small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucune conversation récente</h5>
+                            <p class="text-muted">Commencez une nouvelle conversation pour communiquer avec les autres utilisateurs.</p>
+                            <a href="{% url 'school_management:conversation_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                Créer une conversation
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.list-group-item {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    transition: all 0.15s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}

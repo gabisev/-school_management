@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Espace Professeur{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête personnalisé -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            {% if professeur.photo %}
+                                <img src="{{ professeur.photo.url }}" alt="Photo" class="rounded-circle img-fluid border border-white" style="max-width: 100px;">
+                            {% else %}
+                                <div class="rounded-circle bg-white text-success d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 2rem;">
+                                    {{ professeur.user.first_name.0 }}{{ professeur.user.last_name.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h2 class="mb-1">Bonjour, {{ professeur.user.get_full_name }} !</h2>
+                            <p class="mb-1">
+                                <i class="fas fa-chalkboard-teacher me-2"></i>Professeur • 
+                                <i class="fas fa-calendar me-2"></i>Année {{ annee_scolaire|default:"2024-2025" }}
+                            </p>
+                            <p class="mb-0">
+                                <i class="fas fa-book me-2"></i>
+                                {% for matiere in matieres %}
+                                    {{ matiere.nom }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                            <small>Dernière connexion : {{ request.user.last_login|date:"d/m/Y à H:i"|default:"Première connexion" }}</small>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-cog me-1"></i>Mon compte
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="showProfile()"><i class="fas fa-user me-2"></i>Mon profil</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="changePassword()"><i class="fas fa-key me-2"></i>Changer mot de passe</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'school_management:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3>{{ total_eleves }}</h3>
+                    <p class="mb-0">Élèves suivis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-school fa-2x mb-2"></i>
+                    <h3>{{ classes|length }}</h3>
+                    <p class="mb-0">Classes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                    <h3>{{ total_evaluations }}</h3>
+                    <p class="mb-0">Évaluations créées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-edit fa-2x mb-2"></i>
+                    <h3>{{ notes_a_saisir }}</h3>
+                    <p class="mb-0">Notes à saisir</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nouvelle ligne pour la messagerie -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-2x mb-2"></i>
+                    <h3>{{ conversations_count|default:0 }}</h3>
+                    <p class="mb-0">Conversations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope-open fa-2x mb-2"></i>
+                    <h3>{{ unread_messages_count|default:0 }}</h3>
+                    <p class="mb-0">Messages non lus</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-comments fa-2x mb-2"></i>
+                    <h6 class="mb-2">Accès rapide à la messagerie</h6>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'school_management:messaging_dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-comments me-1"></i>Mes conversations
+                        </a>
+                        <a href="{% url 'school_management:conversation_create' %}" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-plus me-1"></i>Nouvelle conversation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mes classes -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school me-2"></i>Mes classes
+                    </h5>
+                    <a href="{% url 'school_management:classe_list' %}" class="btn btn-sm btn-primary">
+                        Voir toutes
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if classes %}
+                        <div class="row">
+                            {% for classe in classes %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">{{ classe.nom }}</h6>
+                                            <p class="card-text">
+                                                <i class="fas fa-users me-1"></i>{{ classe.eleves.count }} élèves<br>
+                                                <small class="text-muted">{{ classe.niveau }}</small>
+                                            </p>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'school_management:classe_detail' classe.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'school_management:rapport_classe' classe.pk %}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-chart-bar"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-school fa-3x mb-3"></i>
+                            <p>Aucune classe assignée</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mes matières -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Mes matières
+                    </h5>
+                    <a href="{% url 'school_management:matiere_list' %}" class="btn btn-sm btn-primary">
+                        Voir toutes
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if matieres %}
+                        {% for matiere in matieres %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
+                                <div>
+                                    <h6 class="mb-1">{{ matiere.nom }}</h6>
+                                    <small class="text-muted">{{ matiere.code }} • Coef. {{ matiere.coefficient }}</small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'school_management:matiere_detail' matiere.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-book fa-3x mb-3"></i>
+                            <p>Aucune matière assignée</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Évaluations récentes -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Mes évaluations récentes
+                    </h5>
+                    <div>
+                        <a href="{% url 'school_management:evaluation_create' %}" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-plus me-1"></i>Nouvelle évaluation
+                        </a>
+                        <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-sm btn-primary">
+                            Voir toutes
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if evaluations_recentes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Titre</th>
+                                        <th>Type</th>
+                                        <th>Matière</th>
+                                        <th>Classe</th>
+                                        <th>Date</th>
+                                        <th>Notes saisies</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evaluation in evaluations_recentes %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" class="text-decoration-none">
+                                                    {{ evaluation.titre }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if evaluation.type_evaluation == 'DEVOIR' %}bg-primary
+                                                    {% elif evaluation.type_evaluation == 'COMPOSITION' %}bg-danger
+                                                    {% elif evaluation.type_evaluation == 'INTERROGATION' %}bg-warning text-dark
+                                                    {% else %}bg-info{% endif %}">
+                                                    {{ evaluation.get_type_evaluation_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ evaluation.matiere.nom }}</td>
+                                            <td>{{ evaluation.classe.nom }}</td>
+                                            <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="badge bg-info">{{ evaluation.note_set.count }}/{{ evaluation.classe.eleves.count }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'school_management:evaluation_detail' evaluation.pk %}" class="btn btn-sm btn-outline-info" title="Voir">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'school_management:saisir_notes' evaluation.pk %}" class="btn btn-sm btn-outline-success" title="Saisir notes">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <p>Aucune évaluation créée</p>
+                            <a href="{% url 'school_management:evaluation_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Créer ma première évaluation
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <a href="{% url 'school_management:evaluation_create' %}" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-plus me-2"></i>Nouvelle évaluation
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'school_management:absence_create' %}" class="btn btn-outline-warning w-100 mb-2">
+                                <i class="fas fa-user-times me-2"></i>Signaler absence
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'school_management:evaluation_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-clipboard-list me-2"></i>Mes évaluations
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'school_management:rapports' %}" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-chart-bar me-2"></i>Rapports
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="showSchedule()" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-calendar me-2"></i>Planning
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'school_management:messaging_dashboard' %}" class="btn btn-outline-dark w-100 mb-2">
+                                <i class="fas fa-envelope me-2"></i>Messages
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showProfile() {
+    window.location.href = "{% url 'school_management:user_profile' %}";
+}
+
+function changePassword() {
+    window.location.href = "{% url 'school_management:change_password' %}";
+}
+
+function showSchedule() {
+    window.location.href = "{% url 'school_management:planning_dashboard' %}";
+}
+
+</script>
+{% endblock %}
+

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load school_extras %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user text-primary me-2"></i>
+                    Mon Profil
+                </h1>
+                <a href="{% url 'school_management:change_password' %}" class="btn btn-outline-warning">
+                    <i class="fas fa-key me-1"></i>
+                    Changer le mot de passe
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-edit me-2"></i>Informations personnelles
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Prénom
+                                    </label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.first_name.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Nom
+                                    </label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.last_name.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user-tag me-1"></i>Type d'utilisateur
+                            </label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-{% if user_type == 'admin' %}danger{% elif user_type == 'professeur' %}primary{% elif user_type == 'eleve' %}success{% else %}info{% endif %}">
+                                    {% if user_type == 'admin' %}
+                                        <i class="fas fa-crown me-1"></i>Administrateur
+                                    {% elif user_type == 'professeur' %}
+                                        <i class="fas fa-chalkboard-teacher me-1"></i>Professeur
+                                    {% elif user_type == 'eleve' %}
+                                        <i class="fas fa-graduation-cap me-1"></i>Élève
+                                    {% elif user_type == 'parent' %}
+                                        <i class="fas fa-users me-1"></i>Parent
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Date d'inscription
+                            </label>
+                            <div class="form-control-plaintext">
+                                {{ user.date_joined|date:"d/m/Y à H:i" }}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-clock me-1"></i>Dernière connexion
+                            </label>
+                            <div class="form-control-plaintext">
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Jamais connecté</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'school_management:dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-info-circle me-2"></i>Informations du compte
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Nom d'utilisateur :</strong><br>
+                        <span class="text-muted">{{ user.username }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Statut :</strong><br>
+                        {% if user.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Actif
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times me-1"></i>Inactif
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if user.is_staff %}
+                        <div class="mb-3">
+                            <strong>Permissions :</strong><br>
+                            <span class="badge bg-warning">
+                                <i class="fas fa-shield-alt me-1"></i>Staff
+                            </span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user.is_superuser %}
+                        <div class="mb-3">
+                            <strong>Permissions :</strong><br>
+                            <span class="badge bg-danger">
+                                <i class="fas fa-crown me-1"></i>Super utilisateur
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card shadow mt-3">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-key me-2"></i>Sécurité
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Pour des raisons de sécurité, changez régulièrement votre mot de passe.
+                    </p>
+                    <a href="{% url 'school_management:change_password' %}" class="btn btn-warning btn-sm w-100">
+                        <i class="fas fa-key me-1"></i>Changer le mot de passe
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

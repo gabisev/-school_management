@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails de l'utilisateur - {{ target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-user text-primary me-2"></i>
+                        Détails de l'utilisateur
+                    </h2>
+                    <p class="text-muted mb-0">{{ target_user.username }} - {{ profile_type }}</p>
+                </div>
+                <a href="{% url 'school_management:admin_users' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations de connexion -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-key me-2"></i>
+                        Informations de Connexion
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold">Nom d'utilisateur:</td>
+                            <td>{{ target_user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Email:</td>
+                            <td>{{ target_user.email|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Prénom:</td>
+                            <td>{{ target_user.first_name|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Nom:</td>
+                            <td>{{ target_user.last_name|default:"Non renseigné" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Type d'utilisateur:</td>
+                            <td>
+                                {% if target_user.is_superuser %}
+                                    <span class="badge bg-danger">Super Admin</span>
+                                {% elif target_user.is_staff %}
+                                    <span class="badge bg-warning">Staff</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ profile_type }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Statut:</td>
+                            <td>
+                                {% if target_user.is_active %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactif</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Date d'inscription:</td>
+                            <td>{{ target_user.date_joined|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Dernière connexion:</td>
+                            <td>
+                                {% if target_user.last_login %}
+                                    {{ target_user.last_login|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Jamais connecté</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note de sécurité:</strong> Les mots de passe sont cryptés et ne peuvent pas être affichés en clair pour des raisons de sécurité.
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'school_management:admin_reset_user_password' target_user.id %}" class="btn btn-warning">
+                            <i class="fas fa-key me-1"></i>
+                            Réinitialiser le mot de passe
+                        </a>
+                        {% if not target_user.is_active %}
+                            <form method="post" action="{% url 'school_management:admin_users' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="activate">
+                                <input type="hidden" name="user_id" value="{{ target_user.id }}">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check me-1"></i>
+                                    Activer le compte
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'school_management:admin_users' %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="deactivate">
+                                <input type="hidden" name="user_id" value="{{ target_user.id }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir désactiver ce compte ?')">
+                                    <i class="fas fa-times me-1"></i>
+                                    Désactiver le compte
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations du profil -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-id-card me-2"></i>
+                        Informations du Profil
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if user_profile %}
+                        {% if profile_type == "Professeur" %}
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Civilité:</td>
+                                    <td>{{ user_profile.get_civilite_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Téléphone:</td>
+                                    <td>{{ user_profile.telephone|default:"Non renseigné" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Date d'embauche:</td>
+                                    <td>{{ user_profile.date_embauche|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Matières:</td>
+                                    <td>
+                                        {% for matiere in user_profile.matieres.all %}
+                                            <span class="badge bg-primary me-1">{{ matiere.nom }}</span>
+                                        {% empty %}
+                                            Aucune matière assignée
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Classes:</td>
+                                    <td>
+                                        {% for classe in user_profile.classes.all %}
+                                            <span class="badge bg-info me-1">{{ classe.nom }}</span>
+                                        {% empty %}
+                                            Aucune classe assignée
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            </table>
+                        {% elif profile_type == "Élève" %}
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Numéro étudiant:</td>
+                                    <td>{{ user_profile.numero_etudiant }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Date de naissance:</td>
+                                    <td>{{ user_profile.date_naissance|date:"d/m/Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Sexe:</td>
+                                    <td>{{ user_profile.get_sexe_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Classe:</td>
+                                    <td>{{ user_profile.classe.nom }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Téléphone:</td>
+                                    <td>{{ user_profile.telephone|default:"Non renseigné" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>{{ user_profile.email|default:"Non renseigné" }}</td>
+                                </tr>
+                            </table>
+                        {% elif profile_type == "Parent" %}
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Sexe:</td>
+                                    <td>{{ user_profile.get_sexe_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Relation:</td>
+                                    <td>{{ user_profile.get_relation_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Profession:</td>
+                                    <td>{{ user_profile.profession|default:"Non renseigné" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Téléphone:</td>
+                                    <td>{{ user_profile.telephone|default:"Non renseigné" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>{{ user_profile.email|default:"Non renseigné" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Enfants:</td>
+                                    <td>
+                                        {% for enfant in user_profile.get_enfants %}
+                                            <span class="badge bg-success me-1">{{ enfant.prenom }} {{ enfant.nom }}</span>
+                                        {% empty %}
+                                            Aucun enfant assigné
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            </table>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun profil spécifique associé à cet utilisateur.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

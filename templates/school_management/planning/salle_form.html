@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Modifier{% else %}Créer{% endif %} Salle
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .form-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    .salle-preview {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .equipements-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="fas fa-door-open me-2"></i>
+                        {% if object %}Modifier{% else %}Créer{% endif %} Salle
+                    </h2>
+                    <p class="text-muted">
+                        {% if object %}
+                            Modifiez les informations de cette salle
+                        {% else %}
+                            Créez une nouvelle salle
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'school_management:salle_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+
+            <!-- Aperçu de la salle -->
+            <div class="salle-preview" id="salle-preview">
+                <h5 class="mb-0">
+                    <i class="fas fa-door-open me-2"></i>
+                    <span id="preview-nom">Nom de la salle</span>
+                </h5>
+                <div class="h4 mt-2">
+                    <span id="preview-numero">N° --</span>
+                </div>
+                <div class="small">
+                    <span id="preview-type">Type</span> • 
+                    <span id="preview-capacite">--</span> places
+                    <span id="preview-handicap" class="ms-2" style="display: none;">
+                        <i class="fas fa-wheelchair"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card form-card">
+                <div class="card-header form-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                        Informations de la salle
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="salle-form">
+                        {% csrf_token %}
+                        
+                        <!-- Section 1: Informations de base -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.nom.id_for_label }}" class="form-label">
+                                        <i class="fas fa-door-open me-2"></i>Nom de la salle *
+                                    </label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}
+                                        <div class="text-danger small">{{ form.nom.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hashtag me-2"></i>Numéro de salle *
+                                    </label>
+                                    {{ form.numero }}
+                                    {% if form.numero.errors %}
+                                        <div class="text-danger small">{{ form.numero.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.capacite.id_for_label }}" class="form-label">
+                                        <i class="fas fa-users me-2"></i>Capacité *
+                                    </label>
+                                    {{ form.capacite }}
+                                    {% if form.capacite.errors %}
+                                        <div class="text-danger small">{{ form.capacite.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.type_salle.id_for_label }}" class="form-label">
+                                        <i class="fas fa-tag me-2"></i>Type de salle *
+                                    </label>
+                                    {{ form.type_salle }}
+                                    {% if form.type_salle.errors %}
+                                        <div class="text-danger small">{{ form.type_salle.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Équipements -->
+                        <div class="equipements-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-tools me-2"></i>Équipements et Accessibilité
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="{{ form.equipements.id_for_label }}" class="form-label">
+                                            <i class="fas fa-tools me-2"></i>Équipements disponibles
+                                        </label>
+                                        {{ form.equipements }}
+                                        <div class="form-text">Listez les équipements disponibles (ex: Tableau, Projecteur, Ordinateurs...)</div>
+                                        {% if form.equipements.errors %}
+                                            <div class="text-danger small">{{ form.equipements.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-wheelchair me-2"></i>Accessibilité
+                                        </label>
+                                        <div class="form-check">
+                                            {{ form.accessible_handicap }}
+                                            <label class="form-check-label" for="{{ form.accessible_handicap.id_for_label }}">
+                                                Accessible aux personnes à mobilité réduite
+                                            </label>
+                                        </div>
+                                        {% if form.accessible_handicap.errors %}
+                                            <div class="text-danger small">{{ form.accessible_handicap.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Statut -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-toggle-on me-2"></i>Statut de la salle
+                                    </label>
+                                    <div class="form-check">
+                                        {{ form.active }}
+                                        <label class="form-check-label" for="{{ form.active.id_for_label }}">
+                                            Salle active (disponible pour les réservations)
+                                        </label>
+                                    </div>
+                                    {% if form.active.errors %}
+                                        <div class="text-danger small">{{ form.active.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'school_management:salle_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if object %}Mettre à jour{% else %}Créer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nomInput = document.getElementById('id_nom');
+    const numeroInput = document.getElementById('id_numero');
+    const capaciteInput = document.getElementById('id_capacite');
+    const typeSelect = document.getElementById('id_type_salle');
+    const handicapCheckbox = document.getElementById('id_accessible_handicap');
+    
+    const previewNom = document.getElementById('preview-nom');
+    const previewNumero = document.getElementById('preview-numero');
+    const previewType = document.getElementById('preview-type');
+    const previewCapacite = document.getElementById('preview-capacite');
+    const previewHandicap = document.getElementById('preview-handicap');
+    const sallePreview = document.getElementById('salle-preview');
+
+    // Fonction pour mettre à jour l'aperçu
+    function updatePreview() {
+        // Mettre à jour le nom
+        if (nomInput.value) {
+            previewNom.textContent = nomInput.value;
+        } else {
+            previewNom.textContent = 'Nom de la salle';
+        }
+        
+        // Mettre à jour le numéro
+        if (numeroInput.value) {
+            previewNumero.textContent = 'N° ' + numeroInput.value;
+        } else {
+            previewNumero.textContent = 'N° --';
+        }
+        
+        // Mettre à jour le type
+        if (typeSelect.value) {
+            const types = {
+                'COURS': 'Salle de cours',
+                'LABO': 'Laboratoire',
+                'INFO': 'Salle informatique',
+                'SPORT': 'Salle de sport',
+                'BIBLIOTHEQUE': 'Bibliothèque',
+                'ADMINISTRATION': 'Administration',
+                'REUNION': 'Salle de réunion',
+                'AUTRE': 'Autre'
+            };
+            previewType.textContent = types[typeSelect.value] || typeSelect.value;
+        } else {
+            previewType.textContent = 'Type';
+        }
+        
+        // Mettre à jour la capacité
+        if (capaciteInput.value) {
+            previewCapacite.textContent = capaciteInput.value;
+        } else {
+            previewCapacite.textContent = '--';
+        }
+        
+        // Mettre à jour l'accessibilité
+        if (handicapCheckbox.checked) {
+            previewHandicap.style.display = 'inline';
+        } else {
+            previewHandicap.style.display = 'none';
+        }
+        
+        // Changer la couleur selon le type
+        const colors = {
+            'COURS': 'linear-gradient(135deg, #28a745, #20c997)',
+            'LABO': 'linear-gradient(135deg, #17a2b8, #138496)',
+            'INFO': 'linear-gradient(135deg, #6f42c1, #5a32a3)',
+            'SPORT': 'linear-gradient(135deg, #fd7e14, #e55a00)',
+            'BIBLIOTHEQUE': 'linear-gradient(135deg, #20c997, #17a2b8)',
+            'ADMINISTRATION': 'linear-gradient(135deg, #6c757d, #5a6268)',
+            'REUNION': 'linear-gradient(135deg, #007bff, #0056b3)',
+            'AUTRE': 'linear-gradient(135deg, #6c757d, #5a6268)'
+        };
+        
+        if (typeSelect.value && colors[typeSelect.value]) {
+            sallePreview.style.background = colors[typeSelect.value];
+        } else {
+            sallePreview.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        }
+    }
+
+    // Événements pour mettre à jour l'aperçu
+    nomInput.addEventListener('input', updatePreview);
+    numeroInput.addEventListener('input', updatePreview);
+    capaciteInput.addEventListener('input', updatePreview);
+    typeSelect.addEventListener('change', updatePreview);
+    handicapCheckbox.addEventListener('change', updatePreview);
+
+    // Validation du formulaire
+    const form = document.getElementById('salle-form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = ['id_nom', 'id_numero', 'id_capacite', 'id_type_salle'];
+        let hasErrors = false;
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                hasErrors = true;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+        }
+    });
+
+    // Mise à jour initiale
+    updatePreview();
+});
+</script>
+{% endblock %}
+
+
+
+

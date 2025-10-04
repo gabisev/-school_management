@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Communications - Gestion École{% endblock %}
+
+{% block page_title %}Communications de l'école{% endblock %}
+
+{% block page_actions %}
+{% if is_admin or is_professeur %}
+<a href="{% url 'school_management:communication_create' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i>
+    Nouvelle communication
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Filtres et recherche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="search" 
+                       name="search" 
+                       value="{{ request.GET.search }}"
+                       placeholder="Titre ou contenu...">
+            </div>
+            <div class="col-md-2">
+                <label for="type" class="form-label">Type</label>
+                <select name="type" id="type" class="form-control">
+                    <option value="">Tous les types</option>
+                    <option value="INFO" {% if request.GET.type == "INFO" %}selected{% endif %}>Information</option>
+                    <option value="URGENT" {% if request.GET.type == "URGENT" %}selected{% endif %}>Urgent</option>
+                    <option value="EVENEMENT" {% if request.GET.type == "EVENEMENT" %}selected{% endif %}>Événement</option>
+                    <option value="RAPPEL" {% if request.GET.type == "RAPPEL" %}selected{% endif %}>Rappel</option>
+                    <option value="CONSEIL" {% if request.GET.type == "CONSEIL" %}selected{% endif %}>Conseil</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="priorite" class="form-label">Priorité</label>
+                <select name="priorite" id="priorite" class="form-control">
+                    <option value="">Toutes les priorités</option>
+                    <option value="BASSE" {% if request.GET.priorite == "BASSE" %}selected{% endif %}>Basse</option>
+                    <option value="NORMALE" {% if request.GET.priorite == "NORMALE" %}selected{% endif %}>Normale</option>
+                    <option value="HAUTE" {% if request.GET.priorite == "HAUTE" %}selected{% endif %}>Haute</option>
+                    <option value="URGENTE" {% if request.GET.priorite == "URGENTE" %}selected{% endif %}>Urgente</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" name="date" id="date" class="form-control" value="{{ request.GET.date }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des communications -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-bullhorn me-2"></i>
+            Communications
+            {% if communications %}
+                <span class="badge bg-primary ms-2">{{ communications|length }}</span>
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        {% if communications %}
+            {% for communication in communications %}
+                <div class="border-bottom p-3 {% if communication.priorite == 'URGENTE' %}border-danger border-3{% elif communication.priorite == 'HAUTE' %}border-warning border-2{% endif %}">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <span class="badge bg-{{ communication.get_type_color }} fs-6">
+                                        {{ communication.get_type_communication_display }}
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">
+                                        <a href="{% url 'school_management:communication_detail' communication.pk %}" class="text-decoration-none">
+                                            {{ communication.titre }}
+                                        </a>
+                                    </h5>
+                                    <p class="text-muted mb-2">{{ communication.contenu|truncatewords:30 }}</p>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="fas fa-user me-1"></i>
+                                        <span class="me-3">{{ communication.auteur.get_full_name }}</span>
+                                        <i class="fas fa-calendar me-1"></i>
+                                        <span class="me-3">{{ communication.date_creation|date:"d/m/Y à H:i" }}</span>
+                                        <i class="fas fa-users me-1"></i>
+                                        <span>{{ communication.get_destinataires_display_custom }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="mb-2">
+                                <span class="badge bg-{{ communication.get_priorite_color }}">
+                                    <i class="fas fa-flag me-1"></i>{{ communication.get_priorite_display }}
+                                </span>
+                            </div>
+                            {% if communication.piece_jointe %}
+                                <div class="mb-2">
+                                    <a href="{{ communication.piece_jointe.url }}" class="btn btn-sm btn-outline-info" target="_blank">
+                                        <i class="fas fa-paperclip me-1"></i>Pièce jointe
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if is_admin or is_professeur %}
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'school_management:communication_detail' communication.pk %}" 
+                                       class="btn btn-outline-info" title="Voir les détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if is_admin or communication.auteur == user %}
+                                    <a href="{% url 'school_management:communication_update' communication.pk %}" 
+                                       class="btn btn-outline-warning" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'school_management:communication_delete' communication.pk %}" 
+                                       class="btn btn-outline-danger" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Pagination des communications" class="p-3">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.priorite %}&priorite={{ request.GET.priorite }}{% endif %}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center p-4">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune communication trouvée</h5>
+                <p class="text-muted">Aucune communication ne correspond aux critères de recherche.</p>
+                {% if is_admin or is_professeur %}
+                    <a href="{% url 'school_management:communication_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Créer la première communication
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
